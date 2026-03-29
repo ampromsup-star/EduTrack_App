@@ -71,7 +71,31 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyIxp6jQcq8-o9TdmcIvoUHnkmsLB_uWpK-cAOKl5FrPkaLHvt7qodVC5CXBp0JB9TKIA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxdHwcrDtYif7bhtg3Tep670ZxJcH9ImFYZCXVlkJ4RtwnZrLCgSRc48vy6jIS_epHr-w/exec"; 
+
+async function testLogin() {
+    console.log("กำลังทดสอบการเชื่อมต่อ...");
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "login",
+                user: "somchai", // ทดสอบด้วยข้อมูลที่มีใน Sheets
+                pass: "1234"
+            })
+        });
+        const result = await response.json();
+        console.log("ผลลัพธ์จาก Google Sheets:", result);
+        if(result.success) {
+            alert("เชื่อมต่อสำเร็จ! ยินดีต้อนรับ " + result.user.name);
+        } else {
+            alert("เชื่อมต่อได้ แต่รหัสผ่านผิด: " + result.message);
+        }
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการเชื่อมต่อ:", error);
+        alert("เชื่อมต่อไม่ได้! กรุณาเช็คการ Deploy ใน Apps Script");
+    }
+}
         const beep = new Audio('https://www.soundjay.com/buttons/beep-07a.mp3');
 
         function showPage(page) {
