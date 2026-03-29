@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduScan - ระบบจัดการห้องเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #F8FAFC; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="app" class="flex min-h-screen">
+        <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-blue-50">
+            <div class="p-6 text-2xl font-bold text-blue-600">EduScan</div>
+            <nav class="flex-1 px-4">
+                <button onclick="showPage('dashboard')" class="w-full flex items-center p-3 mb-2 text-blue-600 bg-blue-50 rounded-xl font-semibold">
+                    🏠 Dashboard
+                </button>
+                <button onclick="showPage('scan')" class="w-full flex items-center p-3 mb-2 text-slate-500 hover:bg-slate-50 rounded-xl">
+                    📸 เช็คชื่อ/ตรวจงาน
+                </button>
+                <button onclick="showPage('assignments')" class="w-full flex items-center p-3 mb-2 text-slate-500 hover:bg-slate-50 rounded-xl">
+                    📚 รายการใบงาน
+                </button>
+            </nav>
+            <div class="p-4 border-t border-slate-100">
+                <button onclick="logout()" class="text-red-400 text-sm">ออกจากระบบ</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10">
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold" id="page-title">สรุปภาพรวม</h1>
+                    <p class="text-slate-400 text-sm">ยินดีต้อนรับสู่ระบบจัดการเรียนการสอน</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="user-display" class="font-medium text-blue-600">กำลังโหลด...</span>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm"></div>
+                </div>
+            </header>
+
+            <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-blue-400">
+                    <p class="text-slate-500 text-sm">เข้าเรียนวันนี้</p>
+                    <h2 class="text-3xl font-bold mt-2">85%</h2>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-emerald-400">
+                    <p class="text-slate-500 text-sm">ส่งงานแล้ว</p>
+                    <h2 class="text-3xl font-bold mt-2">12/15</h2>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-orange-400">
+                    <p class="text-slate-500 text-sm">งานค้างส่ง</p>
+                    <h2 class="text-3xl font-bold mt-2">3</h2>
+                </div>
+            </div>
+
+            <div id="scan-content" class="hidden max-w-xl mx-auto">
+                <div class="bg-white p-6 rounded-3xl shadow-lg text-center">
+                    <h3 class="text-lg font-bold mb-4">สแกน QR Code</h3>
+                    <div id="reader" class="rounded-2xl overflow-hidden border-2 border-blue-50"></div>
+                    <p id="scan-status" class="mt-4 text-emerald-500 font-bold"></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = "URL_APPS_SCRIPT_ของคุณ";
+        const beep = new Audio('https://www.soundjay.com/buttons/beep-07a.mp3');
+
+        function showPage(page) {
+            document.getElementById('dashboard-content').classList.toggle('hidden', page !== 'dashboard');
+            document.getElementById('scan-content').classList.toggle('hidden', page !== 'scan');
+            if(page === 'scan') startScanner();
+        }
+
+        function startScanner() {
+            let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+            scanner.render((decodedText) => {
+                beep.play();
+                document.getElementById('scan-status').innerText = "บันทึกสำเร็จ: " + decodedText;
+                // ส่งข้อมูลไปที่ Google Sheets ผ่าน API_URL
+            });
+        }
+    </script>
+</body>
+</html>
