@@ -5,246 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduTrack - ระบบจัดการห้องเรียน</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #F8FAFC; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        body { font-family: 'Sarabun', sans-serif; background-color: #F1F5F9; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .sidebar-btn { @apply w-full flex items-center p-3 mb-2 rounded-2xl transition-all duration-200 text-slate-500 font-medium; }
+        .sidebar-btn.active { @apply bg-blue-600 text-white shadow-lg shadow-blue-200; }
+        .student-card { @apply bg-white p-4 rounded-3xl shadow-sm border border-slate-100 text-center relative hover:shadow-md transition cursor-pointer hover:-translate-y-1; }
     </style>
 </head>
 <body class="text-slate-800">
 
     <div id="app" class="flex min-h-screen">
-        <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-blue-50">
-            <div class="p-6 text-2xl font-bold text-blue-600 italic">EduScan</div>
-            <nav class="flex-1 px-4">
-                <button onclick="showPage('dashboard')" id="btn-dashboard" class="w-full flex items-center p-3 mb-2 rounded-xl transition-all">🏠 Dashboard</button>
-                <button onclick="showPage('scan')" id="btn-scan" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all">📸 เช็คชื่อ/ตรวจงาน</button>
-                <button onclick="showPage('assignments')" id="btn-assignments" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all">📚 รายการใบงาน</button>
+        <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-slate-100 p-4">
+            <div class="p-4 mb-6 text-2xl font-black text-blue-600 italic tracking-tighter">EduScan</div>
+            <nav class="flex-1">
+                <button onclick="showPage('dashboard')" id="btn-dashboard" class="sidebar-btn active">🏠 แผงควบคุม</button>
+                <button onclick="showPage('scan')" id="btn-scan" class="sidebar-btn">📸 เช็คชื่อ/ตรวจงาน</button>
+                <button onclick="showPage('assignments')" id="btn-assignments" class="sidebar-btn">📚 จัดการใบงาน</button>
             </nav>
-            <div class="p-4 border-t border-slate-100">
-                <button onclick="location.reload()" class="text-red-400 text-sm hover:underline font-medium">ออกจากระบบ</button>
+            <div class="pt-4 border-t border-slate-100">
+                <button onclick="location.reload()" class="w-full text-left p-3 text-red-400 font-bold hover:bg-red-50 rounded-xl transition">🚪 ออกจากระบบ</button>
             </div>
         </aside>
 
         <main class="flex-1 p-6 md:p-10">
             <header class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-2xl font-bold" id="page-title">สรุปภาพรวม</h1>
-                    <p class="text-slate-400 text-sm">ระบบจัดการการเรียน ปวช./ปวส.</p>
+                    <h1 class="text-3xl font-extrabold text-slate-800" id="page-title">ยินดีต้อนรับสู่ห้องเรียน</h1>
+                    <p class="text-slate-400 font-medium">จัดการเรียนการสอน ปวช./ปวส.</p>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span id="user-display" class="font-medium text-blue-600">กำลังโหลด...</span>
-                    <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-500 font-bold">U</div>
+                <div class="flex items-center gap-4 bg-white p-2 pr-6 rounded-full shadow-sm border border-slate-50">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-blue-300 flex items-center justify-center text-white font-bold shadow-md">T</div>
+                    <span id="user-display" class="font-bold text-slate-700 text-sm">กำลังโหลด...</span>
                 </div>
             </header>
 
-            <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-blue-400">
-                    <p class="text-slate-500 text-sm">เข้าเรียนวันนี้</p>
-                    <h2 class="text-3xl font-bold mt-2">85%</h2>
-                </div>
-                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-emerald-400">
-                    <p class="text-slate-500 text-sm">ส่งงานแล้ว (ชิ้น)</p>
-                    <h2 class="text-3xl font-bold mt-2">12/15</h2>
-                </div>
-                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-orange-400">
-                    <p class="text-slate-500 text-sm">งานที่รอตรวจ</p>
-                    <h2 class="text-3xl font-bold mt-2">3</h2>
-                </div>
-            </div>
-
-            <div id="scan-content" class="hidden max-w-xl mx-auto">
-                <div class="bg-white p-6 rounded-3xl shadow-lg text-center border border-blue-50">
-                    <h3 class="text-lg font-bold mb-4 text-blue-600">สแกน QR Code</h3>
-                    <div id="reader" class="rounded-2xl overflow-hidden shadow-inner"></div>
-                </div>
-            </div>
-
-            <div id="assignments-content" class="hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-slate-700">รายการใบงานทั้งหมด</h3>
-                    <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
-                        + เพิ่มใบงานใหม่
-                    </button>
-                </div>
-                
-                <div class="glass-card rounded-3xl overflow-hidden shadow-sm border border-slate-100">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="p-4 font-semibold text-slate-600">วิชา</th>
-                                <th class="p-4 font-semibold text-slate-600">หัวข้อใบงาน</th>
-                                <th class="p-4 font-semibold text-slate-600 text-center">คะแนนเต็ม/ผ่าน</th>
-                                <th class="p-4 font-semibold text-slate-600">กำหนดส่ง</th>
-                                <th class="p-4 font-semibold text-slate-600 text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="assignment-list" class="divide-y divide-slate-50">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <audio id="snd_ok" src="https://www.soundjay.com/buttons/beep-07a.mp3"></audio>
-        </main>
-    </div>
-
-    <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzLL-Pm9HQeRAQXpRz5sd41agN7JerEDnfBVZsH2dXE4G34uKNje8ZVRv4IzZ6rk7Zf/exec";
-        let html5QrcodeScanner = null;
-
-        // --- ระบบเปลี่ยนหน้า ---
-        function showPage(page) {
-            // ซ่อนทุกหน้า
-            document.getElementById('dashboard-content').classList.add('hidden');
-            document.getElementById('scan-content').classList.add('hidden');
-            document.getElementById('assignments-content').classList.add('hidden');
-
-            // แสดงหน้าเป้าหมาย
-            document.getElementById(page + '-content').classList.remove('hidden');
-            
-            // อัปเดต Title
-            const titles = { 'dashboard': 'สรุปภาพรวม', 'scan': 'สแกน QR Code', 'assignments': 'จัดการใบงาน' };
-            document.getElementById('page-title').innerText = titles[page];
-
-            // อัปเดตสีปุ่ม Sidebar
-            ['btn-dashboard', 'btn-scan', 'btn-assignments'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (id === 'btn-' + page) {
-                    btn.classList.add('text-blue-600', 'bg-blue-50', 'font-semibold');
-                    btn.classList.remove('text-slate-500');
-                } else {
-                    btn.classList.remove('text-blue-600', 'bg-blue-50', 'font-semibold');
-                    btn.classList.add('text-slate-500');
-                }
-            });
-
-            // Logic เฉพาะหน้า
-            if (page === 'scan') startScanner();
-            else if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
-            
-            if (page === 'assignments') loadAssignments();
-        }
-
-        // --- ระบบจัดการใบงาน (CRUD) ---
-        async function loadAssignments() {
-            const listBody = document.getElementById('assignment-list');
-            listBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>';
-            
-            try {
-                const res = await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'getAssignments' }) 
-                });
-                const data = await res.json();
-                
-                listBody.innerHTML = data.map(item => `
-                    <tr class="hover:bg-blue-50/30 transition">
-                        <td class="p-4 font-medium">${item.courseId}</td>
-                        <td class="p-4">${item.title}</td>
-                        <td class="p-4 text-center font-bold text-blue-600">${item.fullScore} / ${item.passScore}</td>
-                        <td class="p-4 text-slate-500">${item.dueDate}</td>
-                        <td class="p-4 text-center">
-                            <button onclick="deleteJob(${item.row})" class="text-red-400 hover:text-red-600 font-semibold mx-2">ลบ</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) {
-                listBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">โหลดข้อมูลไม่สำเร็จ หรือยังไม่มีข้อมูล</td></tr>';
-            }
-        }
-
-        async function deleteJob(row) {
-            const result = await Swal.fire({
-                title: 'ยืนยันการลบ?',
-                text: "คุณจะไม่สามารถกู้คืนข้อมูลใบงานนี้ได้",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'ใช่, ลบเลย',
-                cancelButtonText: 'ยกเลิก'
-            });
-
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
-                await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'deleteAssignment', row: row }) 
-                });
-                Swal.fire('ลบสำเร็จ!', '', 'success');
-                loadAssignments();
-            }
-        }
-
-        function openAddModal() {
-            Swal.fire({
-                title: 'เพิ่มใบงานใหม่',
-                html: `
-                    <input id="swal-course" class="swal2-input" placeholder="รหัสวิชา (เช่น C001)">
-                    <input id="swal-title" class="swal2-input" placeholder="หัวข้อใบงาน">
-                    <input id="swal-full" type="number" class="swal2-input" placeholder="คะแนนเต็ม">
-                    <input id="swal-pass" type="number" class="swal2-input" placeholder="คะแนนผ่าน">
-                    <input id="swal-due" type="date" class="swal2-input">
-                `,
-                confirmButtonText: 'บันทึกข้อมูล',
-                showCancelButton: true,
-                preConfirm: () => {
-                    const data = {
-                        courseId: document.getElementById('swal-course').value,
-                        title: document.getElementById('swal-title').value,
-                        fullScore: document.getElementById('swal-full').value,
-                        passScore: document.getElementById('swal-pass').value,
-                        dueDate: document.getElementById('swal-due').value
-                    };
-                    if(!data.courseId || !data.title) return Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
-                    return data;
-                }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-                    await fetch(WEB_APP_URL, { 
-                        method: 'POST', 
-                        body: JSON.stringify({ action: 'addAssignment', ...result.value }) 
-                    });
-                    Swal.fire('สำเร็จ!', 'เพิ่มใบงานเรียบร้อยแล้ว', 'success');
-                    loadAssignments();
-                }
-            });
-        }
-
-        // --- ระบบ Scan QR ---
-        function startScanner() {
-            if(!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-            }
-            html5QrcodeScanner.render(async (decodedText) => {
-                document.getElementById('snd_ok').play();
-                html5QrcodeScanner.pause();
-                
-                Swal.fire({ title: 'กำลังบันทึกการเข้าเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-                try {
-                    const response = await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'recordAttendance', studentId: decodedText, courseId: 'C001' })
-                    });
-                    const res = await response.json();
-                    if(res.status === "success") {
-                        Swal.fire('สำเร็จ!', `บันทึกเวลาเรียบร้อย (${res.info})`, 'success').then(() => html5QrcodeScanner.resume());
-                    }
-                } catch (e) {
-                    Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error').then(() => html5QrcodeScanner.resume());
-                }
-            });
-        }
-
-        // เริ่มต้น
-        window.onload = () => {
-            document.getElementById('user-display').innerText = "ครูสมศรี (Teacher)";
-            showPage('dashboard');
-        };
-    </script>
-</body>
-</html>
+            <div id="dashboard-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-blue-500">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">นักเรียนในห้อง</p>
+                        <h2 class="text-4xl font-black mt-2 text-slate-700">35 <span class="text-sm font-normal text-slate-400">คน</span></h2>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2rem]
