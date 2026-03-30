@@ -11,7 +11,6 @@
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #F8FAFC; }
         .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .nav-active { @apply text-blue-600 bg-blue-50 font-semibold; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -20,15 +19,9 @@
         <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-blue-50">
             <div class="p-6 text-2xl font-bold text-blue-600 italic">EduScan</div>
             <nav class="flex-1 px-4">
-                <button onclick="showPage('dashboard')" id="btn-dashboard" class="w-full flex items-center p-3 mb-2 rounded-xl transition-all hover:bg-blue-50">
-                    🏠 Dashboard
-                </button>
-                <button onclick="showPage('scan')" id="btn-scan" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all hover:bg-blue-50">
-                    📸 เช็คชื่อ/ตรวจงาน
-                </button>
-                <button onclick="showPage('assignments')" id="btn-assignments" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all hover:bg-blue-50">
-                    📚 รายการใบงาน
-                </button>
+                <button onclick="showPage('dashboard')" id="btn-dashboard" class="w-full flex items-center p-3 mb-2 rounded-xl transition-all">🏠 Dashboard</button>
+                <button onclick="showPage('scan')" id="btn-scan" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all">📸 เช็คชื่อ/ตรวจงาน</button>
+                <button onclick="showPage('assignments')" id="btn-assignments" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all">📚 รายการใบงาน</button>
             </nav>
             <div class="p-4 border-t border-slate-100">
                 <button onclick="location.reload()" class="text-red-400 text-sm hover:underline font-medium">ออกจากระบบ</button>
@@ -50,25 +43,22 @@
             <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
                 <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-blue-400">
                     <p class="text-slate-500 text-sm">เข้าเรียนวันนี้</p>
-                    <h2 class="text-3xl font-bold mt-2" id="stat-attendance">85%</h2>
+                    <h2 class="text-3xl font-bold mt-2">85%</h2>
                 </div>
                 <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-emerald-400">
                     <p class="text-slate-500 text-sm">ส่งงานแล้ว (ชิ้น)</p>
-                    <h2 class="text-3xl font-bold mt-2" id="stat-assignments">12/15</h2>
+                    <h2 class="text-3xl font-bold mt-2">12/15</h2>
                 </div>
                 <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-orange-400">
-                    <p class="text-slate-500 text-sm">งานที่รอกลางตรวจ</p>
-                    <h2 class="text-3xl font-bold mt-2" id="stat-pending">3</h2>
+                    <p class="text-slate-500 text-sm">งานที่รอตรวจ</p>
+                    <h2 class="text-3xl font-bold mt-2">3</h2>
                 </div>
             </div>
 
             <div id="scan-content" class="hidden max-w-xl mx-auto">
                 <div class="bg-white p-6 rounded-3xl shadow-lg text-center border border-blue-50">
-                    <h3 class="text-lg font-bold mb-4 text-blue-600">สแกน QR Code เพื่อบันทึกเวลา</h3>
+                    <h3 class="text-lg font-bold mb-4 text-blue-600">สแกน QR Code</h3>
                     <div id="reader" class="rounded-2xl overflow-hidden shadow-inner"></div>
-                    <div id="scan-result" class="mt-6 p-4 rounded-2xl bg-slate-50 hidden">
-                        <p id="scan-status" class="text-lg font-bold"></p>
-                    </div>
                 </div>
             </div>
             
@@ -77,84 +67,59 @@
     </div>
 
     <script>
-        // *** แก้ไข URL นี้ให้เป็น Web App URL ของคุณที่ Deploy จาก Apps Script ***
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxDU3FWRY9YPjrrm3x3ryZ5iqor3CtwhxIQMNrtVhw2W5OcgNVYsqrg6v49Jv7Gf-cwuA/exec";
-        
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzu7KkeOKU4cu6FeFG32pPgKqSI-A06F4nAM24HXkZ3iZ_iOzBMY8a2TxJ2rhU_B446vw/exec";
         let html5QrcodeScanner = null;
-        const beep = document.getElementById('snd_ok');
 
         function showPage(page) {
-            // สลับหน้าจอ
             document.getElementById('dashboard-content').classList.toggle('hidden', page !== 'dashboard');
             document.getElementById('scan-content').classList.toggle('hidden', page !== 'scan');
+            document.getElementById('page-title').innerText = (page === 'dashboard') ? 'สรุปภาพรวม' : 'สแกน QR Code';
             
-            // อัปเดต UI เมนู
-            document.getElementById('btn-dashboard').className = `w-full flex items-center p-3 mb-2 rounded-xl transition-all ${page === 'dashboard' ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-slate-500'}`;
-            document.getElementById('btn-scan').className = `w-full flex items-center p-3 mb-2 rounded-xl transition-all ${page === 'scan' ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-slate-500'}`;
-            
-            document.getElementById('page-title').innerText = page === 'dashboard' ? 'สรุปภาพรวม' : 'สแกนเช็คชื่อ';
+            // อัปเดตสีปุ่ม
+            ['btn-dashboard', 'btn-scan'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (id.includes(page)) {
+                    btn.classList.add('text-blue-600', 'bg-blue-50', 'font-semibold');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    btn.classList.remove('text-blue-600', 'bg-blue-50', 'font-semibold');
+                    btn.classList.add('text-slate-500');
+                }
+            });
 
-            if(page === 'scan') {
-                startScanner();
-            } else {
-                if(html5QrcodeScanner) html5QrcodeScanner.clear();
-            }
+            if(page === 'scan') startScanner();
+            else if(html5QrcodeScanner) html5QrcodeScanner.clear();
         }
 
         function startScanner() {
             if(!html5QrcodeScanner) {
                 html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
             }
-            html5QrcodeScanner.render(onScanSuccess);
-        }
-
-        async function onScanSuccess(decodedText) {
-            beep.play();
-            // หยุดสแกนชั่วคราว
-            html5QrcodeScanner.pause();
-
-            Swal.fire({
-                title: 'กำลังบันทึกข้อมูล...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'recordAttendance',
-                        studentId: decodedText,
-                        courseId: 'C001' // สามารถดึงจากตัวแปรอื่นมาใส่ได้
-                    })
-                });
+            html5QrcodeScanner.render(async (decodedText) => {
+                document.getElementById('snd_ok').play();
+                html5QrcodeScanner.pause();
                 
-                const res = await response.json();
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-                if(res.status === "success") {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'เช็คชื่อสำเร็จ!',
-                        text: `รหัส: ${decodedText} | สถานะ: ${res.info} | เวลา: ${res.time}`,
-                        confirmButtonText: 'ตกลง'
-                    }).then(() => {
-                        html5QrcodeScanner.resume();
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'recordAttendance', studentId: decodedText, courseId: 'C001' })
                     });
-                } else {
-                    throw new Error(res.message);
+                    const res = await response.json();
+                    if(res.status === "success") {
+                        Swal.fire('สำเร็จ!', `บันทึกเวลาเรียบร้อย (${res.info})`, 'success').then(() => html5QrcodeScanner.resume());
+                    }
+                } catch (e) {
+                    Swal.fire('Error', 'เชื่อมต่อฐานข้อมูลไม่ได้', 'error').then(() => html5QrcodeScanner.resume());
                 }
-            } catch (err) {
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error').then(() => {
-                    html5QrcodeScanner.resume();
-                });
-            }
+            });
         }
 
-        // เริ่มต้นที่หน้า Dashboard
         window.onload = () => {
             document.getElementById('user-display').innerText = "ครูสมศรี (Teacher)";
             showPage('dashboard');
-        }
+        };
     </script>
 </body>
 </html>
