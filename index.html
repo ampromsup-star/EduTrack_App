@@ -67,7 +67,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzu7KkeOKU4cu6FeFG32pPgKqSI-A06F4nAM24HXkZ3iZ_iOzBMY8a2TxJ2rhU_B446vw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxhVB8hblTEa2gTD18KWaJAtQIetqMAt4ov46ZxB510JS4OTvu7axQjSpsLjTs3eUNwIA/exec";
         let html5QrcodeScanner = null;
 
         function showPage(page) {
@@ -120,6 +120,118 @@
             document.getElementById('user-display').innerText = "ครูสมศรี (Teacher)";
             showPage('dashboard');
         };
+
+        <div id="assignments-content" class="hidden">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-bold text-slate-700">รายการใบงานทั้งหมด</h3>
+        <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
+            + เพิ่มใบงานใหม่
+        </button>
+    </div>
+    
+    <div class="glass-card rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                    <th class="p-4 font-semibold text-slate-600">วิชา</th>
+                    <th class="p-4 font-semibold text-slate-600">หัวข้อใบงาน</th>
+                    <th class="p-4 font-semibold text-slate-600 text-center">คะแนนเต็ม/ผ่าน</th>
+                    <th class="p-4 font-semibold text-slate-600">กำหนดส่ง</th>
+                    <th class="p-4 font-semibold text-slate-600 text-center">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="assignment-list" class="divide-y divide-slate-50">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // เพิ่มฟังก์ชันจัดการหน้าใบงาน
+    async function loadAssignments() {
+        const listBody = document.getElementById('assignment-list');
+        listBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>';
+        
+        try {
+            const res = await fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'getAssignments' }) 
+            });
+            const data = await res.json();
+            
+            listBody.innerHTML = data.map(item => `
+                <tr class="hover:bg-blue-50/30 transition">
+                    <td class="p-4 font-medium">${item.courseId}</td>
+                    <td class="p-4">${item.title}</td>
+                    <td class="p-4 text-center font-bold text-blue-600">${item.fullScore} / ${item.passScore}</td>
+                    <td class="p-4 text-slate-500">${item.dueDate}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteJob(${item.row})" class="text-red-400 hover:text-red-600 mx-2">ลบ</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            listBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">โหลดข้อมูลไม่สำเร็จ</td></tr>';
+        }
+    }
+
+    async function deleteJob(row) {
+        if(!confirm("ยืนยันการลบใบงานนี้?")) return;
+        Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+        
+        await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'deleteAssignment', row: row }) 
+        });
+        
+        Swal.fire('ลบสำเร็จ', '', 'success');
+        loadAssignments();
+    }
+
+    function openAddModal() {
+        Swal.fire({
+            title: 'เพิ่มใบงานใหม่',
+            html: `
+                <input id="swal-course" class="swal2-input" placeholder="รหัสวิชา (เช่น C001)">
+                <input id="swal-title" class="swal2-input" placeholder="หัวข้อใบงาน">
+                <input id="swal-full" type="number" class="swal2-input" placeholder="คะแนนเต็ม">
+                <input id="swal-pass" type="number" class="swal2-input" placeholder="คะแนนผ่าน">
+                <input id="swal-due" type="date" class="swal2-input">
+            `,
+            confirmButtonText: 'บันทึกข้อมูล',
+            preConfirm: () => {
+                return {
+                    courseId: document.getElementById('swal-course').value,
+                    title: document.getElementById('swal-title').value,
+                    fullScore: document.getElementById('swal-full').value,
+                    passScore: document.getElementById('swal-pass').value,
+                    dueDate: document.getElementById('swal-due').value
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'addAssignment', ...result.value }) 
+                });
+                Swal.fire('บันทึกสำเร็จ', '', 'success');
+                loadAssignments();
+            }
+        });
+    }
+
+    // แก้ไข function showPage เดิมให้รองรับการโหลดข้อมูล
+    function showPage(page) {
+        document.getElementById('dashboard-content').classList.add('hidden');
+        document.getElementById('scan-content').classList.add('hidden');
+        document.getElementById('assignments-content').classList.add('hidden');
+
+        document.getElementById(page + '-content').classList.remove('hidden');
+        
+        if(page === 'assignments') loadAssignments();
+        // ... (โค้ดจัดการสีปุ่มเดิม)
+    }
+        
     </script>
 </body>
 </html>
