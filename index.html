@@ -1,112 +1,250 @@
-const SS_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack - ระบบจัดการห้องเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #F8FAFC; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="text-slate-800">
 
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const action = data.action;
-    let result;
+    <div id="app" class="flex min-h-screen">
+        <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-blue-50">
+            <div class="p-6 text-2xl font-bold text-blue-600 italic">EduScan</div>
+            <nav class="flex-1 px-4">
+                <button onclick="showPage('dashboard')" id="btn-dashboard" class="w-full flex items-center p-3 mb-2 rounded-xl transition-all">🏠 Dashboard</button>
+                <button onclick="showPage('scan')" id="btn-scan" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all">📸 เช็คชื่อ/ตรวจงาน</button>
+                <button onclick="showPage('assignments')" id="btn-assignments" class="w-full flex items-center p-3 mb-2 text-slate-500 rounded-xl transition-all">📚 รายการใบงาน</button>
+            </nav>
+            <div class="p-4 border-t border-slate-100">
+                <button onclick="location.reload()" class="text-red-400 text-sm hover:underline font-medium">ออกจากระบบ</button>
+            </div>
+        </aside>
 
-    if (action === 'recordAttendance') {
-      result = recordAttendance(data.studentId, data.courseId);
-    } else if (action === 'login') {
-      result = checkLogin(data.user, data.pass);
-    } else {
-      result = { status: "error", message: "ไม่พบ Action ที่ระบุ" };
-    }
+        <main class="flex-1 p-6 md:p-10">
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-2xl font-bold" id="page-title">สรุปภาพรวม</h1>
+                    <p class="text-slate-400 text-sm">ระบบจัดการการเรียน ปวช./ปวส.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="user-display" class="font-medium text-blue-600">กำลังโหลด...</span>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-500 font-bold">U</div>
+                </div>
+            </header>
 
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
+            <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-blue-400">
+                    <p class="text-slate-500 text-sm">เข้าเรียนวันนี้</p>
+                    <h2 class="text-3xl font-bold mt-2">85%</h2>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-emerald-400">
+                    <p class="text-slate-500 text-sm">ส่งงานแล้ว (ชิ้น)</p>
+                    <h2 class="text-3xl font-bold mt-2">12/15</h2>
+                </div>
+                <div class="glass-card p-6 rounded-3xl shadow-sm border-b-4 border-orange-400">
+                    <p class="text-slate-500 text-sm">งานที่รอตรวจ</p>
+                    <h2 class="text-3xl font-bold mt-2">3</h2>
+                </div>
+            </div>
 
-function recordAttendance(studentId, courseId) {
-  const ss = SpreadsheetApp.openById(SS_ID);
-  const sheet = ss.getSheetByName('Attendance');
-  const now = new Date();
-  const dateStr = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd");
-  const timeStr = Utilities.formatDate(now, "GMT+7", "HH:mm");
-  
-  let status = (timeStr > "08:15") ? "สาย" : "ตรง";
-  
-  sheet.appendRow([sheet.getLastRow(), studentId, courseId, dateStr, timeStr, status]);
-  
-  return { status: "success", info: status, time: timeStr };
-}
+            <div id="scan-content" class="hidden max-w-xl mx-auto">
+                <div class="bg-white p-6 rounded-3xl shadow-lg text-center border border-blue-50">
+                    <h3 class="text-lg font-bold mb-4 text-blue-600">สแกน QR Code</h3>
+                    <div id="reader" class="rounded-2xl overflow-hidden shadow-inner"></div>
+                </div>
+            </div>
 
-function checkLogin(user, pass) {
-  const sheet = SpreadsheetApp.openById(SS_ID).getSheetByName('Users');
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][4] == user && data[i][5] == pass) {
-      return { status: "success", user: { name: data[i][1], role: data[i][2] } };
-    }
-  }
-  return { status: "error", message: "รหัสผ่านผิด" };
-}
+            <div id="assignments-content" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-700">รายการใบงานทั้งหมด</h3>
+                    <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">
+                        + เพิ่มใบงานใหม่
+                    </button>
+                </div>
+                
+                <div class="glass-card rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th class="p-4 font-semibold text-slate-600">วิชา</th>
+                                <th class="p-4 font-semibold text-slate-600">หัวข้อใบงาน</th>
+                                <th class="p-4 font-semibold text-slate-600 text-center">คะแนนเต็ม/ผ่าน</th>
+                                <th class="p-4 font-semibold text-slate-600">กำหนดส่ง</th>
+                                <th class="p-4 font-semibold text-slate-600 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assignment-list" class="divide-y divide-slate-50">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <audio id="snd_ok" src="https://www.soundjay.com/buttons/beep-07a.mp3"></audio>
+        </main>
+    </div>
 
-// เพิ่มต่อท้ายใน Code.gs เดิม
-function doGet(e) {
-  return HtmlService.createTemplateFromFile('index').evaluate()
-         .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-}
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzLL-Pm9HQeRAQXpRz5sd41agN7JerEDnfBVZsH2dXE4G34uKNje8ZVRv4IzZ6rk7Zf/exec";
+        let html5QrcodeScanner = null;
 
-// ฟังก์ชันดึงรายการงานทั้งหมด
-function getAssignments() {
-  const sheet = SpreadsheetApp.openById(SS_ID).getSheetByName('Assignments');
-  const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
-  return data.map((row, index) => ({
-    row: index + 2, // เก็บตำแหน่งแถวไว้สำหรับอ้างอิงตอนลบ/แก้ไข
-    id: row[0],
-    courseId: row[1],
-    title: row[2],
-    fullScore: row[3],
-    passScore: row[4],
-    dueDate: row[5] ? Utilities.formatDate(new Date(row[5]), "GMT+7", "yyyy-MM-dd") : ""
-  }));
-}
+        // --- ระบบเปลี่ยนหน้า ---
+        function showPage(page) {
+            // ซ่อนทุกหน้า
+            document.getElementById('dashboard-content').classList.add('hidden');
+            document.getElementById('scan-content').classList.add('hidden');
+            document.getElementById('assignments-content').classList.add('hidden');
 
-// ฟังก์ชันลบงาน
-function deleteAssignment(row) {
-  const sheet = SpreadsheetApp.openById(SS_ID).getSheetByName('Assignments');
-  sheet.deleteRow(row);
-  return { status: "success" };
-}
+            // แสดงหน้าเป้าหมาย
+            document.getElementById(page + '-content').classList.remove('hidden');
+            
+            // อัปเดต Title
+            const titles = { 'dashboard': 'สรุปภาพรวม', 'scan': 'สแกน QR Code', 'assignments': 'จัดการใบงาน' };
+            document.getElementById('page-title').innerText = titles[page];
 
-// ฟังก์ชันเพิ่มงานใหม่
-function addAssignment(data) {
-  const sheet = SpreadsheetApp.openById(SS_ID).getSheetByName('Assignments');
-  sheet.appendRow([
-    "ASGN-" + Utilities.getUuid().substring(0,5), // สุ่ม ID
-    data.courseId,
-    data.title,
-    data.fullScore,
-    data.passScore,
-    data.dueDate
-  ]);
-  return { status: "success" };
-}
+            // อัปเดตสีปุ่ม Sidebar
+            ['btn-dashboard', 'btn-scan', 'btn-assignments'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (id === 'btn-' + page) {
+                    btn.classList.add('text-blue-600', 'bg-blue-50', 'font-semibold');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    btn.classList.remove('text-blue-600', 'bg-blue-50', 'font-semibold');
+                    btn.classList.add('text-slate-500');
+                }
+            });
 
-// อัปเดต doPost ให้รองรับ Action ใหม่ๆ
-function doPost(e) {
-  try {
-    const data = JSON.parse(e.postData.contents);
-    const action = data.action;
-    
-    if (action === 'getAssignments') return jsonResponse(getAssignments());
-    if (action === 'deleteAssignment') return jsonResponse(deleteAssignment(data.row));
-    if (action === 'addAssignment') return jsonResponse(addAssignment(data));
-    if (action === 'recordAttendance') return jsonResponse(recordAttendance(data.studentId, data.courseId));
-    if (action === 'login') return jsonResponse(checkLogin(data.user, data.pass));
+            // Logic เฉพาะหน้า
+            if (page === 'scan') startScanner();
+            else if (html5QrcodeScanner) { html5QrcodeScanner.clear(); html5QrcodeScanner = null; }
+            
+            if (page === 'assignments') loadAssignments();
+        }
 
-  } catch (err) {
-    return jsonResponse({status: "error", message: err.toString()});
-  }
-}
+        // --- ระบบจัดการใบงาน (CRUD) ---
+        async function loadAssignments() {
+            const listBody = document.getElementById('assignment-list');
+            listBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>';
+            
+            try {
+                const res = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'getAssignments' }) 
+                });
+                const data = await res.json();
+                
+                listBody.innerHTML = data.map(item => `
+                    <tr class="hover:bg-blue-50/30 transition">
+                        <td class="p-4 font-medium">${item.courseId}</td>
+                        <td class="p-4">${item.title}</td>
+                        <td class="p-4 text-center font-bold text-blue-600">${item.fullScore} / ${item.passScore}</td>
+                        <td class="p-4 text-slate-500">${item.dueDate}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="deleteJob(${item.row})" class="text-red-400 hover:text-red-600 font-semibold mx-2">ลบ</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                listBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">โหลดข้อมูลไม่สำเร็จ หรือยังไม่มีข้อมูล</td></tr>';
+            }
+        }
 
-function jsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
+        async function deleteJob(row) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณจะไม่สามารถกู้คืนข้อมูลใบงานนี้ได้",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'ใช่, ลบเลย',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+                await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'deleteAssignment', row: row }) 
+                });
+                Swal.fire('ลบสำเร็จ!', '', 'success');
+                loadAssignments();
+            }
+        }
+
+        function openAddModal() {
+            Swal.fire({
+                title: 'เพิ่มใบงานใหม่',
+                html: `
+                    <input id="swal-course" class="swal2-input" placeholder="รหัสวิชา (เช่น C001)">
+                    <input id="swal-title" class="swal2-input" placeholder="หัวข้อใบงาน">
+                    <input id="swal-full" type="number" class="swal2-input" placeholder="คะแนนเต็ม">
+                    <input id="swal-pass" type="number" class="swal2-input" placeholder="คะแนนผ่าน">
+                    <input id="swal-due" type="date" class="swal2-input">
+                `,
+                confirmButtonText: 'บันทึกข้อมูล',
+                showCancelButton: true,
+                preConfirm: () => {
+                    const data = {
+                        courseId: document.getElementById('swal-course').value,
+                        title: document.getElementById('swal-title').value,
+                        fullScore: document.getElementById('swal-full').value,
+                        passScore: document.getElementById('swal-pass').value,
+                        dueDate: document.getElementById('swal-due').value
+                    };
+                    if(!data.courseId || !data.title) return Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    return data;
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+                    await fetch(WEB_APP_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ action: 'addAssignment', ...result.value }) 
+                    });
+                    Swal.fire('สำเร็จ!', 'เพิ่มใบงานเรียบร้อยแล้ว', 'success');
+                    loadAssignments();
+                }
+            });
+        }
+
+        // --- ระบบ Scan QR ---
+        function startScanner() {
+            if(!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+            }
+            html5QrcodeScanner.render(async (decodedText) => {
+                document.getElementById('snd_ok').play();
+                html5QrcodeScanner.pause();
+                
+                Swal.fire({ title: 'กำลังบันทึกการเข้าเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'recordAttendance', studentId: decodedText, courseId: 'C001' })
+                    });
+                    const res = await response.json();
+                    if(res.status === "success") {
+                        Swal.fire('สำเร็จ!', `บันทึกเวลาเรียบร้อย (${res.info})`, 'success').then(() => html5QrcodeScanner.resume());
+                    }
+                } catch (e) {
+                    Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error').then(() => html5QrcodeScanner.resume());
+                }
+            });
+        }
+
+        // เริ่มต้น
+        window.onload = () => {
+            document.getElementById('user-display').innerText = "ครูสมศรี (Teacher)";
+            showPage('dashboard');
+        };
+    </script>
+</body>
+</html>
