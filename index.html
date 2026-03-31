@@ -96,151 +96,204 @@
     </div>
 
     <script>
-        // *** สำคัญ: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ***
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzmTDTdxFqU_lHf3KxiNknl4LDH1R6h-l7XHYGrczmwE1_SAg21tS6TWhiDTwWGqdUU5g/exec";
+        <script>
+    // *** สำคัญ: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ***
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyBv78tvCzvzMeAeFAs7rx6o4rDdrwuI4TwhUPuA_5YRcVQkfewMGmrd_BKK6DtrRdiZw/exec";
 
-        function showPage(page) {
-            ['dashboard', 'scan', 'assignments'].forEach(p => {
-                document.getElementById(p + '-content').classList.add('hidden');
-                document.getElementById('btn-' + p).classList.remove('active');
+    // 1. ฟังก์ชันจัดการหน้าจอ
+    function showPage(page) {
+        ['dashboard', 'scan', 'assignments'].forEach(p => {
+            document.getElementById(p + '-content').classList.add('hidden');
+            document.getElementById('btn-' + p).classList.remove('active');
+        });
+        document.getElementById(page + '-content').classList.remove('hidden');
+        document.getElementById('btn-' + page).classList.add('active');
+        
+        if (page === 'assignments') loadAssignments();
+    }
+
+    // 2. ฟังก์ชันกลางสำหรับเรียก API (แก้ปัญหา CORS & Redirect)
+    async function safeFetch(payload) {
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                redirect: "follow"
             });
-            document.getElementById(page + '-content').classList.remove('hidden');
-            document.getElementById('btn-' + page).classList.add('active');
-            
-            if (page === 'assignments') loadAssignments();
+            return await response.json();
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            throw err;
         }
+    }
 
-        async function loadAssignments() {
-            const tbody = document.getElementById('assignment-list');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse">กำลังโหลดข้อมูล...</td></tr>';
+    // 3. ฟังก์ชันโหลดข้อมูลใบงาน
+    async function loadAssignments() {
+        const tbody = document.getElementById('assignment-list');
+        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse">กำลังโหลดข้อมูล...</td></tr>';
+        
+        try {
+            const data = await safeFetch({ action: 'getAssignments' });
             
-            try {
-                const res = await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'getAssignments' }) 
-                });
-                const data = await res.json();
-                
-                tbody.innerHTML = data.map(item => `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4 font-medium text-blue-600">${item.courseId}</td>
-                        <td class="p-4 font-bold text-slate-700">${item.title}</td>
-                        <td class="p-4 text-center">
-                            <span class="font-bold text-slate-800">${item.fullScore}</span> / 
-                            <span class="text-emerald-500 font-bold">${item.passScore}</span>
-                        </td>
-                        <td class="p-4 text-slate-500">${item.dueDate}</td>
-                        <td class="p-4 text-center">
-                            <div class="flex justify-center gap-2">
-                                <button onclick='openEditModal(${JSON.stringify(item)})' class="bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1 rounded-lg text-sm font-bold transition">แก้ไข</button>
-                                <button onclick="deleteAssignment(${item.row})" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1 rounded-lg text-sm font-bold transition">ลบ</button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400">ไม่มีข้อมูลใบงาน</td></tr>';
+                return;
             }
-        }
 
-        // ฟังก์ชันแก้ไขใบงาน (Edit)
-        function openEditModal(item) {
-            Swal.fire({
-                title: 'แก้ไขข้อมูลใบงาน',
-                html: `
-                    <div class="text-left space-y-3">
-                        <label class="text-xs font-bold text-slate-400">ชื่อวิชา / รหัสวิชา</label>
-                        <input id="edit-course" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.courseId}">
-                        <label class="text-xs font-bold text-slate-400">หัวข้อใบงาน</label>
-                        <input id="edit-title" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.title}">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-400">คะแนนเต็ม</label>
-                                <input id="edit-full" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.fullScore}">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-400">คะแนนผ่าน</label>
-                                <input id="edit-pass" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.passScore}">
-                            </div>
+            tbody.innerHTML = data.map(item => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4 font-medium text-blue-600">${item.courseId}</td>
+                    <td class="p-4 font-bold text-slate-700">${item.title}</td>
+                    <td class="p-4 text-center">
+                        <span class="font-bold text-slate-800">${item.fullScore}</span> / 
+                        <span class="text-emerald-500 font-bold">${item.passScore}</span>
+                    </td>
+                    <td class="p-4 text-slate-500">${item.dueDate}</td>
+                    <td class="p-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick='openEditModal(${JSON.stringify(item)})' class="bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1 rounded-lg text-sm font-bold transition">แก้ไข</button>
+                            <button onclick="deleteAssignment(${item.row})" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1 rounded-lg text-sm font-bold transition">ลบ</button>
                         </div>
-                        <label class="text-xs font-bold text-slate-400">วันกำหนดส่ง</label>
-                        <input id="edit-date" type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.dueDate}">
-                    </div>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'บันทึกการแก้ไข',
-                confirmButtonColor: '#2563eb',
-                preConfirm: () => {
-                    return {
-                        action: 'updateAssignment',
-                        row: item.row,
-                        courseId: document.getElementById('edit-course').value,
-                        title: document.getElementById('edit-title').value,
-                        fullScore: document.getElementById('edit-full').value,
-                        passScore: document.getElementById('edit-pass').value,
-                        dueDate: document.getElementById('edit-date').value
-                    }
-                }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                    Swal.fire({ icon: 'success', title: 'แก้ไขข้อมูลสำเร็จ', timer: 1500, showConfirmButton: false });
-                    loadAssignments();
-                }
-            });
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">เชื่อมต่อ Server ล้มเหลว</td></tr>';
         }
+    }
 
-        async function deleteAssignment(row) {
-            const confirm = await Swal.fire({
-                title: 'ยืนยันการลบ?',
-                text: "หากลบแล้วข้อมูลจะหายไปจากระบบทันที",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'ใช่, ลบเลย'
-            });
-
-            if (confirm.isConfirmed) {
-                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
-                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteAssignment', row: row }) });
-                Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false });
+    // 4. ฟังก์ชันเพิ่มใบงานใหม่
+    function openAddModal() {
+        Swal.fire({
+            title: 'เพิ่มใบงานใหม่',
+            html: `
+                <div class="text-left space-y-3">
+                    <input id="add-course" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="รหัสวิชา">
+                    <input id="add-title" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="หัวข้อใบงาน">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input id="add-full" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="คะแนนเต็ม">
+                        <input id="add-pass" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="คะแนนผ่าน">
+                    </div>
+                    <input id="add-date" type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none">
+                </div>
+            `,
+            confirmButtonText: 'ตกลง',
+            showCancelButton: true,
+            preConfirm: () => {
+                const payload = {
+                    action: 'addAssignment',
+                    courseId: document.getElementById('add-course').value,
+                    title: document.getElementById('add-title').value,
+                    fullScore: document.getElementById('add-full').value,
+                    passScore: document.getElementById('add-pass').value,
+                    dueDate: document.getElementById('add-date').value
+                };
+                if(!payload.courseId || !payload.title) return Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return payload;
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+                await safeFetch(result.value);
+                Swal.fire({ icon: 'success', title: 'เพิ่มสำเร็จ', timer: 1000, showConfirmButton: false });
                 loadAssignments();
             }
-        }
+        });
+    }
 
-        function openAddModal() {
-            Swal.fire({
-                title: 'เพิ่มใบงานใหม่',
-                html: `
-                    <div class="text-left space-y-3">
-                        <input id="add-course" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="รหัสวิชา">
-                        <input id="add-title" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="หัวข้อใบงาน">
-                        <div class="grid grid-cols-2 gap-4">
-                            <input id="add-full" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="คะแนนเต็ม">
-                            <input id="add-pass" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="คะแนนผ่าน">
+    // 5. ฟังก์ชันแก้ไขใบงาน
+    function openEditModal(item) {
+        Swal.fire({
+            title: 'แก้ไขข้อมูลใบงาน',
+            html: `
+                <div class="text-left space-y-3">
+                    <label class="text-xs font-bold text-slate-400">ชื่อวิชา / รหัสวิชา</label>
+                    <input id="edit-course" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.courseId}">
+                    <label class="text-xs font-bold text-slate-400">หัวข้อใบงาน</label>
+                    <input id="edit-title" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.title}">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-400">คะแนนเต็ม</label>
+                            <input id="edit-full" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.fullScore}">
                         </div>
-                        <input id="add-date" type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none">
+                        <div>
+                            <label class="text-xs font-bold text-slate-400">คะแนนผ่าน</label>
+                            <input id="edit-pass" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.passScore}">
+                        </div>
                     </div>
-                `,
-                confirmButtonText: 'ตกลง',
-                preConfirm: () => {
-                    return {
-                        action: 'addAssignment',
-                        courseId: document.getElementById('add-course').value,
-                        title: document.getElementById('add-title').value,
-                        fullScore: document.getElementById('add-full').value,
-                        passScore: document.getElementById('add-pass').value,
-                        dueDate: document.getElementById('add-date').value
-                    }
+                    <label class="text-xs font-bold text-slate-400">วันกำหนดส่ง</label>
+                    <input id="edit-date" type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.dueDate}">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'บันทึกการแก้ไข',
+            confirmButtonColor: '#2563eb',
+            preConfirm: () => {
+                return {
+                    action: 'updateAssignment',
+                    row: item.row,
+                    courseId: document.getElementById('edit-course').value,
+                    title: document.getElementById('edit-title').value,
+                    fullScore: document.getElementById('edit-full').value,
+                    passScore: document.getElementById('edit-pass').value,
+                    dueDate: document.getElementById('edit-date').value
                 }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(result.value) });
-                    loadAssignments();
-                }
-            });
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await safeFetch(result.value);
+                Swal.fire({ icon: 'success', title: 'แก้ไขข้อมูลสำเร็จ', timer: 1000, showConfirmButton: false });
+                loadAssignments();
+            }
+        });
+    }
+
+    // 6. ฟังก์ชันลบใบงาน
+    async function deleteAssignment(row) {
+        const confirm = await Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: "หากลบแล้วข้อมูลจะหายไปจากระบบทันที",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'ใช่, ลบเลย'
+        });
+
+        if (confirm.isConfirmed) {
+            Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+            await safeFetch({ action: 'deleteAssignment', row: row });
+            Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1000, showConfirmButton: false });
+            loadAssignments();
         }
+    }
+
+    // 7. ฟังก์ชันออกรายงาน (Export CSV)
+    async function exportReport() {
+        Swal.fire({ title: 'กำลังดึงข้อมูล...', didOpen: () => Swal.showLoading() });
+        try {
+            const data = await safeFetch({ action: 'getReport' });
+            let csv = "ID,Name,Nickname,Score\n";
+            data.students.forEach(s => {
+                csv += `${s.id},${s.name},${s.nickname},${s.score}\n`;
+            });
+            
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "EduScan_Report.csv";
+            link.click();
+            Swal.close();
+        } catch (e) {
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถสร้างรายงานได้', 'error');
+        }
+    }
+
+    // โหลดข้อมูลเริ่มต้น
+    window.onload = () => {
+        // สามารถเพิ่มการเช็ค Login หรือโหลดข้อมูลหน้าแรกที่นี่ได้
+    };
     </script>
 </body>
 </html>
