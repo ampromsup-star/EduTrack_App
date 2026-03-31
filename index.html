@@ -1,154 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack - ระบบจัดการห้องเรียน</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Sarabun', sans-serif; background: #f0f2f5; }
-        .active-nav { @apply bg-blue-600 text-white shadow-lg; }
-        .card-student { @apply bg-white p-4 rounded-3xl shadow-sm border border-slate-200 text-center transition hover:shadow-md; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #F1F5F9; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .sidebar-btn { @apply w-full flex items-center p-3 mb-2 rounded-2xl transition-all duration-200 text-slate-500 font-medium; }
+        .sidebar-btn.active { @apply bg-blue-600 text-white shadow-lg shadow-blue-200; }
+        .student-card { @apply bg-white p-4 rounded-3xl shadow-sm border border-slate-100 text-center relative hover:shadow-md transition cursor-pointer hover:-translate-y-1; }
     </style>
 </head>
-<body class="text-slate-700">
+<body class="text-slate-800">
 
-    <div class="flex min-h-screen">
-        <aside class="w-64 bg-white p-6 border-r hidden md:block">
-            <h1 class="text-2xl font-black text-blue-600 italic mb-10">EduScan</h1>
-            <nav class="space-y-2">
-                <button onclick="nav('dash')" id="m-dash" class="w-full flex p-3 rounded-2xl font-bold active-nav">🏠 แผงควบคุม</button>
-                <button onclick="nav('std')" id="m-std" class="w-full flex p-3 rounded-2xl font-bold text-slate-500">👥 จัดการนักเรียน</button>
-                <button onclick="nav('asgn')" id="m-asgn" class="w-full flex p-3 rounded-2xl font-bold text-slate-500">📚 จัดการใบงาน</button>
-                <hr class="my-4">
-                <button onclick="exportCSV()" class="w-full flex p-3 rounded-2xl font-bold text-emerald-600 bg-emerald-50">📊 สรุปรายงาน</button>
+    <div id="app" class="flex min-h-screen">
+        <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-slate-100 p-4">
+            <div class="p-4 mb-6 text-2xl font-black text-blue-600 italic tracking-tighter">EduScan</div>
+            <nav class="flex-1">
+                <button onclick="showPage('dashboard')" id="btn-dashboard" class="sidebar-btn active">🏠 แผงควบคุม</button>
+                <button onclick="showPage('scan')" id="btn-scan" class="sidebar-btn">📸 เช็คชื่อ/ตรวจงาน</button>
+                <button onclick="showPage('assignments')" id="btn-assignments" class="sidebar-btn">📚 จัดการใบงาน</button>
             </nav>
+            <div class="pt-4 border-t border-slate-100">
+                <button onclick="location.reload()" class="w-full text-left p-3 text-red-400 font-bold hover:bg-red-50 rounded-xl transition">🚪 ออกจากระบบ</button>
+            </div>
         </aside>
 
-        <main class="flex-1 p-8">
-            <div class="flex justify-between items-center mb-10">
+        <main class="flex-1 p-6 md:p-10">
+            <header class="flex justify-between items-center mb-8">
                 <div>
-                    <h2 id="page-title" class="text-3xl font-extrabold">ยินดีต้อนรับสู่ห้องเรียน</h2>
-                    <p class="text-slate-400">ระบบจัดการนักเรียนและคะแนน ปวช./ปวส.</p>
+                    <h1 class="text-3xl font-extrabold text-slate-800" id="page-title">ยินดีต้อนรับสู่ห้องเรียน</h1>
+                    <p class="text-slate-400 font-medium">จัดการเรียนการสอน ปวช./ปวส.</p>
                 </div>
-                <div class="bg-white px-4 py-2 rounded-full border shadow-sm flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full text-white flex items-center justify-center font-bold">T</div>
-                    <span class="font-bold text-sm">คุณครู Admin</span>
+                <div class="flex items-center gap-4 bg-white p-2 pr-6 rounded-full shadow-sm border border-slate-50">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-blue-300 flex items-center justify-center text-white font-bold shadow-md">T</div>
+                    <span id="user-display" class="font-bold text-slate-700 text-sm">คุณครู (Admin)</span>
                 </div>
-            </div>
+            </header>
 
-            <div id="p-dash" class="page">
-                <div id="grid-std" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            <div id="dashboard-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-blue-500">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">นักเรียนในห้อง</p>
+                        <h2 class="text-4xl font-black mt-2 text-slate-700">35 <span class="text-sm font-normal text-slate-400">คน</span></h2>
                     </div>
+                    <div class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-purple-500">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">งานที่ต้องส่ง</p>
+                        <h2 class="text-4xl font-black mt-2 text-slate-700">12 <span class="text-sm font-normal text-slate-400">ชิ้น</span></h2>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-emerald-500">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">มาเรียนวันนี้</p>
+                        <h2 class="text-4xl font-black mt-2 text-slate-700">98 <span class="text-sm font-normal text-slate-400">%</span></h2>
+                    </div>
+                </div>
+                <p class="text-slate-400 text-center italic">ส่วนแสดงรายชื่อนักเรียนกำลังพัฒนา...</p>
             </div>
 
-            <div id="p-std" class="page hidden">
-                <div class="flex justify-between mb-4">
-                    <h3 class="text-xl font-bold">รายชื่อนักเรียนทั้งหมด</h3>
-                    <button onclick="editStd()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">+ เพิ่มนักเรียน</button>
+            <div id="assignments-content" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">รายการใบงาน</h2>
+                    <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-xl transition shadow-lg">
+                        + เพิ่มใบงาน
+                    </button>
                 </div>
-                <div class="bg-white rounded-3xl border overflow-hidden shadow-sm">
+                <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-100">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50 border-b">
-                            <tr><th class="p-4">ID</th><th class="p-4">ชื่อ-นามสกุล</th><th class="p-4">ชื่อเล่น</th><th class="p-4 text-center">จัดการ</th></tr>
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th class="p-4 text-slate-500 font-bold text-sm">วิชา</th>
+                                <th class="p-4 text-slate-500 font-bold text-sm">หัวข้อ</th>
+                                <th class="p-4 text-slate-500 font-bold text-sm text-center">คะแนน (เต็ม/ผ่าน)</th>
+                                <th class="p-4 text-slate-500 font-bold text-sm">กำหนดส่ง</th>
+                                <th class="p-4 text-slate-500 font-bold text-sm text-center">จัดการ</th>
+                            </tr>
                         </thead>
-                        <tbody id="table-std" class="divide-y"></tbody>
+                        <tbody id="assignment-list" class="divide-y divide-slate-50">
+                            </tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="p-asgn" class="page hidden">
-                <div class="flex justify-between mb-4">
-                    <h3 class="text-xl font-bold">รายการใบงาน</h3>
-                    <button onclick="editAsgn()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">+ เพิ่มใบงาน</button>
+            <div id="scan-content" class="hidden">
+                <div class="max-w-md mx-auto bg-white p-6 rounded-[2rem] shadow-lg text-center">
+                    <h3 class="text-xl font-bold mb-4">สแกน QR Code</h3>
+                    <div id="reader" class="rounded-2xl overflow-hidden border-2 border-dashed border-slate-200"></div>
                 </div>
-                <div id="list-asgn" class="grid gap-4"></div>
             </div>
+
         </main>
     </div>
 
     <script>
-        // เปลี่ยนเป็น Web App URL ของคุณ
-        const API_URL = "https://script.google.com/macros/s/AKfycbwgoX--tUSaas2ryVjkeBcKhY_1HnMRUsk-3JQuiLzVSBUn9Dqon-UMig5beBobUbgtIA/exec";
+        // *** สำคัญ: เปลี่ยนเป็น Web App URL ของคุณที่ได้จากการ Deploy ***
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzmTDTdxFqU_lHf3KxiNknl4LDH1R6h-l7XHYGrczmwE1_SAg21tS6TWhiDTwWGqdUU5g/exec";
 
-        function nav(p) {
-            document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
-            document.getElementById('p-'+p).classList.remove('hidden');
-            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active-nav', 'text-white'));
-            document.getElementById('m-'+p).classList.add('active-nav');
-            refreshData();
-        }
-
-        async function call(data) {
-            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(data) });
-            return await res.json();
-        }
-
-        async function refreshData() {
-            const students = await call({ action: 'getStudents' });
+        function showPage(page) {
+            ['dashboard', 'scan', 'assignments'].forEach(p => {
+                document.getElementById(p + '-content').classList.add('hidden');
+                document.getElementById('btn-' + p).classList.remove('active');
+            });
+            document.getElementById(page + '-content').classList.remove('hidden');
+            document.getElementById('btn-' + page).classList.add('active');
             
-            // Render Dash (Grid)
-            document.getElementById('grid-std').innerHTML = students.map(s => `
-                <div class="card-student">
-                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full mx-auto mb-3 flex items-center justify-center text-xl font-bold border-2 border-blue-100">${s.nickname?.[0] || '?'}</div>
-                    <div class="font-bold text-slate-700">#${s.id}</div>
-                    <div class="text-sm font-bold text-blue-600">${s.nickname || 'ไม่มีชื่อ'}</div>
-                    <div class="text-[10px] text-slate-400 truncate">${s.name}</div>
-                    <div class="mt-2 bg-slate-100 text-[10px] py-1 rounded-full font-bold">คะแนน: ${s.score}</div>
-                </div>
-            `).join('');
-
-            // Render Table
-            document.getElementById('table-std').innerHTML = students.map(s => `
-                <tr>
-                    <td class="p-4 font-bold">#${s.id}</td>
-                    <td class="p-4 font-medium">${s.name}</td>
-                    <td class="p-4">${s.nickname}</td>
-                    <td class="p-4 text-center">
-                        <button onclick='editStd(${JSON.stringify(s)})' class="text-blue-500 font-bold mx-2">แก้ไข</button>
-                        <button onclick="del('deleteStudent', ${s.row})" class="text-red-400 font-bold mx-2">ลบ</button>
-                    </td>
-                </tr>
-            `).join('');
+            if (page === 'assignments') loadAssignments();
         }
 
-        function editStd(s = {}) {
-            Swal.fire({
-                title: s.row ? 'แก้ไขนักเรียน' : 'เพิ่มนักเรียน',
-                html: `
-                    <input id="f-id" class="swal2-input" placeholder="เลขที่/ID" value="${s.id||''}">
-                    <input id="f-name" class="swal2-input" placeholder="ชื่อ-นามสกุล" value="${s.name||''}">
-                    <input id="f-nick" class="swal2-input" placeholder="ชื่อเล่น" value="${s.nickname||''}">
-                    <input id="f-score" type="number" class="swal2-input" placeholder="คะแนน" value="${s.score||0}">
-                `,
-                preConfirm: () => ({
-                    action: 'saveStudent', row: s.row,
-                    id: document.getElementById('f-id').value,
-                    name: document.getElementById('f-name').value,
-                    nickname: document.getElementById('f-nick').value,
-                    score: document.getElementById('f-score').value
-                })
-            }).then(r => r.isConfirmed && call(r.value).then(refreshData));
-        }
-
-        async function del(action, row) {
-            if(confirm('ยืนยันการลบ?')) {
-                await call({ action, row });
-                refreshData();
+        async function loadAssignments() {
+            const tbody = document.getElementById('assignment-list');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse">กำลังโหลดข้อมูล...</td></tr>';
+            
+            try {
+                const res = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'getAssignments' }) 
+                });
+                const data = await res.json();
+                
+                tbody.innerHTML = data.map(item => `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4 font-medium text-blue-600">${item.courseId}</td>
+                        <td class="p-4 font-bold text-slate-700">${item.title}</td>
+                        <td class="p-4 text-center">
+                            <span class="font-bold text-slate-800">${item.fullScore}</span> / 
+                            <span class="text-emerald-500 font-bold">${item.passScore}</span>
+                        </td>
+                        <td class="p-4 text-slate-500">${item.dueDate}</td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <button onclick='openEditModal(${JSON.stringify(item)})' class="bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1 rounded-lg text-sm font-bold transition">แก้ไข</button>
+                                <button onclick="deleteAssignment(${item.row})" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1 rounded-lg text-sm font-bold transition">ลบ</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>';
             }
         }
 
-        async function exportCSV() {
-            const data = await call({ action: 'getReport' });
-            let csv = "ID,Name,Nickname,Score\n";
-            data.students.forEach(s => csv += `${s.id},${s.name},${s.nickname},${s.score}\n`);
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url; a.download = "report.csv"; a.click();
+        // ฟังก์ชันแก้ไขใบงาน (Edit)
+        function openEditModal(item) {
+            Swal.fire({
+                title: 'แก้ไขข้อมูลใบงาน',
+                html: `
+                    <div class="text-left space-y-3">
+                        <label class="text-xs font-bold text-slate-400">ชื่อวิชา / รหัสวิชา</label>
+                        <input id="edit-course" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.courseId}">
+                        <label class="text-xs font-bold text-slate-400">หัวข้อใบงาน</label>
+                        <input id="edit-title" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.title}">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-400">คะแนนเต็ม</label>
+                                <input id="edit-full" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.fullScore}">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-400">คะแนนผ่าน</label>
+                                <input id="edit-pass" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.passScore}">
+                            </div>
+                        </div>
+                        <label class="text-xs font-bold text-slate-400">วันกำหนดส่ง</label>
+                        <input id="edit-date" type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none" value="${item.dueDate}">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'บันทึกการแก้ไข',
+                confirmButtonColor: '#2563eb',
+                preConfirm: () => {
+                    return {
+                        action: 'updateAssignment',
+                        row: item.row,
+                        courseId: document.getElementById('edit-course').value,
+                        title: document.getElementById('edit-title').value,
+                        fullScore: document.getElementById('edit-full').value,
+                        passScore: document.getElementById('edit-pass').value,
+                        dueDate: document.getElementById('edit-date').value
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    Swal.fire({ icon: 'success', title: 'แก้ไขข้อมูลสำเร็จ', timer: 1500, showConfirmButton: false });
+                    loadAssignments();
+                }
+            });
         }
 
-        window.onload = refreshData;
+        async function deleteAssignment(row) {
+            const confirm = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "หากลบแล้วข้อมูลจะหายไปจากระบบทันที",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ใช่, ลบเลย'
+            });
+
+            if (confirm.isConfirmed) {
+                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteAssignment', row: row }) });
+                Swal.fire({ icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false });
+                loadAssignments();
+            }
+        }
+
+        function openAddModal() {
+            Swal.fire({
+                title: 'เพิ่มใบงานใหม่',
+                html: `
+                    <div class="text-left space-y-3">
+                        <input id="add-course" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="รหัสวิชา">
+                        <input id="add-title" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="หัวข้อใบงาน">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input id="add-full" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="คะแนนเต็ม">
+                            <input id="add-pass" type="number" class="w-full p-3 rounded-xl bg-slate-100 border-none" placeholder="คะแนนผ่าน">
+                        </div>
+                        <input id="add-date" type="date" class="w-full p-3 rounded-xl bg-slate-100 border-none">
+                    </div>
+                `,
+                confirmButtonText: 'ตกลง',
+                preConfirm: () => {
+                    return {
+                        action: 'addAssignment',
+                        courseId: document.getElementById('add-course').value,
+                        title: document.getElementById('add-title').value,
+                        fullScore: document.getElementById('add-full').value,
+                        passScore: document.getElementById('add-pass').value,
+                        dueDate: document.getElementById('add-date').value
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(result.value) });
+                    loadAssignments();
+                }
+            });
+        }
     </script>
 </body>
 </html>
