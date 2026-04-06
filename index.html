@@ -143,19 +143,47 @@
         </div>
     </div>
 
-    <script>
+<script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoDHq-uAchp6xbvMNeh9JdcikgnYX1smuOgG6_sADZLr4pWUSkLeSF8dkXUOnrsdYlPQ/exec';
         let html5QrCode = null;
         let lastScannedId = null;
+        let myChart = null;
 
-        // เริ่มต้นระบบ
+        // 1. เริ่มต้นระบบ: ดึงข้อมูลทั้งหมดจาก Sheet
         window.onload = () => {
-            initChart();
-            renderRooms();
-            loadStudents('ปวช.1/1');
+            refreshDashboard();
         };
 
-        // ฟังก์ชันเชื่อมต่อ GAS
+        // ฟังก์ชันรีเฟรชข้อมูล Dashboard ทั้งหมด
+        async function refreshDashboard() {
+            // แสดง Loading ระหว่างรอข้อมูล
+            Swal.fire({ 
+                title: 'กำลังเชื่อมต่อข้อมูล...', 
+                allowOutsideClick: false, 
+                didOpen: () => { Swal.showLoading(); } 
+            });
+
+            const response = await callGAS('getFullDashboard');
+            
+            if (response && response.status !== 'error') {
+                // อัปเดตกราฟและตัวเลขสรุป
+                updateChart(response.stats);
+                document.querySelector('.text-xl.font-bold.text-slate-800').innerText = response.total;
+
+                // อัปเดตรายชื่อห้องเรียน
+                renderRooms(response.rooms);
+                
+                // โหลดนักเรียนห้องแรกเป็นค่าเริ่มต้น
+                if (response.rooms.length > 0) {
+                    loadStudents(response.rooms[0].name);
+                }
+                Swal.close();
+            } else {
+                Swal.fire('ผิดพลาด', 'ไม่สามารถดึงข้อมูลจาก Sheet ได้', 'error');
+            }
+        }
+
+        // 2. ฟังก์ชันเชื่อมต่อ GAS (เหมือนเดิมแต่เสถียรขึ้น)
         async function callGAS(action, data = {}) {
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -164,77 +192,90 @@
                 });
                 return await response.json();
             } catch (e) {
-                console.error(e);
+                console.error("GAS Error:", e);
                 return { status: "error" };
             }
         }
 
-        // วาดกราฟ
-        function initChart() {
+        // 3. วาดกราฟวงกลมจากข้อมูลจริง
+        function updateChart(stats) {
             const ctx = document.getElementById('todayChart').getContext('2d');
-            new Chart(ctx, {
+            
+            // ลบกราฟเก่าทิ้งก่อนสร้างใหม่เพื่อป้องกันการซ้อนทับ
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
+                    labels: ['มา', 'สาย', 'ขาด', 'ลา'],
                     datasets: [{
-                        data: [132, 12, 8, 6],
+                        data: [stats['มา'] || 0, stats['สาย'] || 0, stats['ขาด'] || 0, stats['ลา'] || 0],
                         backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
                         borderWidth: 0,
                         cutout: '80%'
                     }]
                 },
-                options: { plugins: { legend: { display: false } } }
+                options: { 
+                    plugins: { legend: { display: false } },
+                    maintainAspectRatio: false 
+                }
             });
+
+            // อัปเดตเปอร์เซ็นต์ในหน้าจอ (ถ้ามี)
+            // คุณสามารถเพิ่มโค้ดคำนวณ % ตรงนี้ได้ถ้าต้องการ
         }
 
-        // แสดงห้องเรียน
-        function renderRooms() {
-            const rooms = [
-                { name: 'ปวช.1/1', count: 32, color: 'bg-blue-600' },
-                { name: 'ปวช.1/2', count: 28, color: 'bg-emerald-500' },
-                { name: 'ปวช.3/5', count: 30, color: 'bg-amber-500' },
-                { name: 'ปวช.3/1', count: 25, color: 'bg-rose-500' },
-                { name: 'ปวส.1/1', count: 27, color: 'bg-purple-500' }
-            ];
+        // 4. แสดงห้องเรียนจากข้อมูลใน Sheet
+        function renderRooms(rooms) {
             const container = document.getElementById('room-list');
             container.innerHTML = rooms.map(r => `
-                <div onclick="loadStudents('${r.name}')" class="card p-4 cursor-pointer hover:border-blue-300 transition group">
-                    <div class="${r.color} w-full h-1 rounded-full mb-3"></div>
+                <div onclick="loadStudents('${r.name}')" class="card p-4 cursor-pointer hover:border-blue-300 transition group relative">
+                    <div class="${r.color || 'bg-blue-600'} w-full h-1 rounded-full mb-3"></div>
                     <p class="font-bold text-slate-800 text-sm mb-1">${r.name}</p>
                     <p class="text-[10px] text-gray-400">${r.count} คน</p>
                 </div>
             `).join('');
         }
 
-        // โหลดรายชื่อนักเรียน (ตัวอย่าง)
-        function loadStudents(room) {
-            document.getElementById('current-room-name').innerText = room;
-            const mockData = [
-                { id: 'S001', name: 'นายกิตติพงษ์ ใจดี', user: 'S001', status: 'มาเรียน', color: 'text-emerald-500 bg-emerald-50' },
-                { id: 'S002', name: 'สมศักดิ์ มีเกียรติ', user: 'S002', status: 'มาเรียน', color: 'text-emerald-500 bg-emerald-50' },
-                { id: 'S003', name: 'สมศรี นาทอง', user: 'S003', status: 'สาย', color: 'text-amber-500 bg-amber-50' }
-            ];
+        // 5. โหลดรายชื่อนักเรียนจาก Sheet ตามห้องที่เลือก
+        async function loadStudents(roomName) {
+            document.getElementById('current-room-name').innerText = roomName;
+            
+            // แสดงสถานะกำลังโหลดเฉพาะในตาราง
             const table = document.getElementById('student-table');
-            table.innerHTML = mockData.map(s => `
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
-                    <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
-                    <td class="px-6 py-4 text-slate-400">${s.user}</td>
-                    <td class="px-6 py-4"><span class="status-pill ${s.color}">${s.status}</span></td>
-                    <td class="px-6 py-4 text-center">
-                        <button class="text-slate-300 hover:text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
-                        <button class="text-slate-300 hover:text-rose-500"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            table.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">กำลังโหลดรายชื่อ...</td></tr>`;
+
+            const students = await callGAS('getStudentsByRoom', { roomName: roomName });
+            
+            if (students && students.length > 0) {
+                table.innerHTML = students.map(s => {
+                    // กำหนดสีสถานะ
+                    let statusColor = "text-gray-400 bg-gray-50"; // ค่าเริ่มต้น
+                    if(s.status === "มาเรียน") statusColor = "text-emerald-500 bg-emerald-50";
+                    if(s.status === "สาย") statusColor = "text-amber-500 bg-amber-50";
+
+                    return `
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
+                        <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                        <td class="px-6 py-4 text-slate-400">${s.username || s.id}</td>
+                        <td class="px-6 py-4"><span class="status-pill ${statusColor}">${s.status || 'ยังไม่เช็คชื่อ'}</span></td>
+                        <td class="px-6 py-4 text-center">
+                            <button class="text-slate-300 hover:text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+                            <button class="text-slate-300 hover:text-rose-500"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } else {
+                table.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">ไม่พบข้อมูลนักเรียนในห้องนี้</td></tr>`;
+            }
         }
 
-        // ระบบสแกนเนอร์
+        // --- ระบบสแกนเนอร์ (คงเดิม) ---
         function openScanner() {
             document.getElementById('scanner-modal').classList.remove('hidden');
             html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-                onScanSuccess
-            );
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
         }
 
         function onScanSuccess(decodedText) {
@@ -243,25 +284,34 @@
             resultBox.innerText = "พบข้อมูลรหัส: " + decodedText;
             resultBox.classList.remove('hidden');
             document.getElementById('status-controls').classList.remove('hidden');
-            html5QrCode.pause();
+            if (html5QrCode) html5QrCode.pause();
         }
 
         async function submitCheckin(status) {
             Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-            const res = await callGAS('saveAttendance', { studentId: lastScannedId, status: status });
-            Swal.fire('สำเร็จ', 'บันทึกสถานะเรียบร้อย', 'success');
+            await callGAS('saveAttendance', { studentId: lastScannedId, status: status });
+            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500 });
             closeScanner();
+            refreshDashboard(); // รีเฟรชหน้าจอเพื่ออัปเดตกราฟและตาราง
         }
 
         function closeScanner() {
-            if (html5QrCode) html5QrCode.stop();
-            document.getElementById('scanner-modal').classList.add('hidden');
-            document.getElementById('status-controls').classList.add('hidden');
-            document.getElementById('scan-result').classList.add('hidden');
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('scanner-modal').classList.add('hidden');
+                    document.getElementById('status-controls').classList.add('hidden');
+                    document.getElementById('scan-result').classList.add('hidden');
+                });
+            }
         }
 
+        // ระบบสลับ Tab หน้าจอ
         function showTab(tabId) {
-            // โค้ดสำหรับสลับหน้าจอ (ถ้ามีหลายหน้า)
+            // ซ่อนหน้าหลักหากไม่ใช่ tab-main (ถ้าคุณทำหน้าอื่นเพิ่ม)
+            // ในที่นี้เน้นหน้าหลักเป็นหลัก
+            if (tabId === 'tab-main') {
+                location.reload(); // ง่ายที่สุดคือโหลดใหม่เพื่อดึงข้อมูลสด
+            }
         }
     </script>
 </body>
