@@ -1,243 +1,213 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduTrack - ระบบจัดการห้องเรียน</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #F1F5F9; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .sidebar-btn { @apply w-full flex items-center p-3 mb-2 rounded-2xl transition-all duration-200 text-slate-500 font-medium; }
-        .sidebar-btn.active { @apply bg-blue-600 text-white shadow-lg shadow-blue-200; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduTrack QR - Attendance System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap');
+    body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+    .step-bar { display: flex; background: white; border-radius: 50px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .step { position: relative; flex: 1; padding: 12px; color: #94a3b8; font-size: 14px; cursor: pointer; transition: 0.3s; text-align: center; }
+    .step.active { background: #1e40af; color: white; }
+    .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6; }
+  </style>
 </head>
-<body class="text-slate-800">
+<body>
 
-    <div id="app" class="flex min-h-screen">
-        <aside class="w-64 bg-white shadow-xl hidden md:flex flex-col border-r border-slate-100 p-4">
-            <div class="p-4 mb-6 text-2xl font-black text-blue-600 italic tracking-tighter">EduScan</div>
-            <nav class="flex-1">
-                <button onclick="showPage('dashboard')" id="btn-dashboard" class="sidebar-btn active">🏠 แผงควบคุม</button>
-                <button onclick="showPage('scan')" id="btn-scan" class="sidebar-btn">📸 เช็คชื่อ/ตรวจงาน</button>
-                <button onclick="showPage('assignments')" id="btn-assignments" class="sidebar-btn">📚 จัดการใบงาน</button>
-            </nav>
-            <div class="pt-4 border-t border-slate-100">
-                <button onclick="location.reload()" class="w-full text-left p-3 text-red-400 font-bold hover:bg-red-50 rounded-xl transition">🚪 ออกจากระบบ</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 p-6 md:p-10">
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-slate-800">ยินดีต้อนรับสู่ห้องเรียน</h1>
-                    <p class="text-slate-400 font-medium">จัดการเรียนการสอน ปวช./ปวส.</p>
-                </div>
-                <div class="flex items-center gap-4 bg-white p-2 pr-6 rounded-full shadow-sm border border-slate-50">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-blue-300 flex items-center justify-center text-white font-bold shadow-md">T</div>
-                    <span class="font-bold text-slate-700 text-sm">คุณครู (Admin)</span>
-                </div>
-            </header>
-
-            <div id="dashboard-content">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-blue-500 text-center">
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">นักเรียนในห้อง</p>
-                        <h2 class="text-4xl font-black mt-2 text-slate-700" id="stat-students">0</h2>
-                    </div>
-                    <div class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-purple-500 text-center">
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">งานทั้งหมด</p>
-                        <h2 class="text-4xl font-black mt-2 text-slate-700" id="stat-assignments">0</h2>
-                    </div>
-                    <button onclick="exportReport()" class="glass-card p-6 rounded-[2rem] shadow-sm border-b-4 border-emerald-500 text-center hover:bg-emerald-50 transition">
-                        <p class="text-emerald-600 text-xs font-bold uppercase tracking-wider">ดาวน์โหลดรายงาน</p>
-                        <h2 class="text-2xl font-black mt-2 text-slate-700">CSV Export</h2>
-                    </button>
-                </div>
-            </div>
-
-            <div id="assignments-content" class="hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800">รายการใบงาน</h2>
-                    <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-xl transition shadow-lg">+ เพิ่มใบงาน</button>
-                </div>
-                <div class="bg-white rounded-3xl shadow-sm overflow-x-auto border border-slate-100">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="p-4 text-slate-500 font-bold text-sm">วิชา</th>
-                                <th class="p-4 text-slate-500 font-bold text-sm">หัวข้อ</th>
-                                <th class="p-4 text-slate-500 font-bold text-sm text-center">คะแนน (เต็ม/ผ่าน)</th>
-                                <th class="p-4 text-slate-500 font-bold text-sm">กำหนดส่ง</th>
-                                <th class="p-4 text-slate-500 font-bold text-sm text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="assignment-list" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="scan-content" class="hidden">
-                <div class="max-w-md mx-auto bg-white p-6 rounded-[2rem] shadow-lg text-center">
-                    <h3 class="text-xl font-bold mb-4">สแกน QR Code</h3>
-                    <div id="reader" class="rounded-2xl overflow-hidden border-2 border-dashed border-slate-200"></div>
-                </div>
-            </div>
-        </main>
+  <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10">
+      <div class="text-center mb-8">
+        <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-atom text-white text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">EduTrack QR</h1>
+      </div>
+      <div class="space-y-4">
+        <input type="text" id="user" placeholder="ชื่อผู้ใช้งาน" class="w-full p-4 bg-gray-50 border rounded-xl outline-none">
+        <input type="password" id="pass" placeholder="รหัสผ่าน" class="w-full p-4 bg-gray-50 border rounded-xl outline-none">
+        <button onclick="login()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg">เข้าสู่ระบบ</button>
+      </div>
+      <div id="login-msg" class="text-red-500 text-center mt-4 text-sm"></div>
     </div>
+  </div>
 
-    <script>
-        // *** สำคัญ: หากใช้ doGet ในตัวมันเอง ไม่ต้องใส่ URL เต็มก็ได้ แต่ถ้าจะใส่ต้องแน่ใจว่า Deploy ใหม่ทุกครั้ง ***
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8bYrO71JLyYY3G6QU2iGrvciWZMbrvsDA_rj14ZykClYzwmp07k1FQcQztu6YoaH8wg/exec";
+  <div id="main-page" class="hidden">
+    <header class="bg-[#1e40af] text-white p-4 flex justify-between items-center px-8 shadow-lg">
+      <h1 class="text-lg font-semibold">EduTrack QR</h1>
+      <div class="flex items-center gap-4">
+        <span id="user-display" class="text-sm"></span>
+        <button onclick="location.reload()" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs transition">Logout</button>
+      </div>
+    </header>
 
-        function showPage(page) {
-            ['dashboard', 'scan', 'assignments'].forEach(p => {
-                document.getElementById(p + '-content').classList.add('hidden');
-                document.getElementById('btn-' + p).classList.remove('active');
-            });
-            document.getElementById(page + '-content').classList.remove('hidden');
-            document.getElementById('btn-' + page).classList.add('active');
-            
-            if (page === 'assignments') loadAssignments();
+    <div class="max-w-6xl mx-auto p-6">
+      <div id="teacher-menu" class="step-bar mb-8 hidden">
+        <div class="step active" onclick="showTab('tab-1', this)"><i class="fas fa-users-rectangle mr-2"></i>จัดการนักเรียน</div>
+        <div class="step" onclick="showTab('tab-2', this)"><i class="fas fa-qrcode mr-2"></i>สร้าง QR</div>
+        <div class="step" onclick="showTab('tab-4', this)"><i class="fas fa-chart-pie mr-2"></i>สรุปผล</div>
+        <div class="step" onclick="showTab('tab-stu-1', this)"><i class="fas fa-camera mr-2"></i>สแกนเช็คชื่อ</div>
+      </div>
+
+      <div id="student-menu" class="step-bar mb-8 hidden">
+        <div class="step active" onclick="showTab('tab-stu-1', this)"><i class="fas fa-camera mr-2"></i>สแกนเข้าเรียน</div>
+      </div>
+
+      <div id="tab-stu-1" class="tab-content hidden">
+        <div class="card max-w-md mx-auto text-center border-2 border-blue-100">
+          <h2 class="text-xl font-bold text-blue-900 mb-4">สแกน QR เข้าเรียน</h2>
+          <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[250px]"></div>
+          <div id="scan-result" class="mt-4 p-3 rounded-lg font-bold text-blue-600">กำลังรอสแกน...</div>
+          <div id="status-buttons" class="grid grid-cols-2 gap-2 mt-4 hidden">
+            <button onclick="submitStatus('มา')" class="bg-green-500 text-white p-3 rounded-xl font-bold shadow">มา</button>
+            <button onclick="submitStatus('สาย')" class="bg-yellow-500 text-white p-3 rounded-xl font-bold shadow">สาย</button>
+            <button onclick="submitStatus('ขาด')" class="bg-red-500 text-white p-3 rounded-xl font-bold shadow">ขาด</button>
+            <button onclick="submitStatus('ลา')" class="bg-blue-500 text-white p-3 rounded-xl font-bold shadow">ลา</button>
+          </div>
+          <button id="btn-rescan" onclick="startScanner()" class="mt-4 text-sm text-gray-500 hidden underline">สแกนใหม่</button>
+        </div>
+      </div>
+
+      <div id="tab-1" class="tab-content">
+        <div id="room-buttons-container" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8"></div>
+        <div id="student-management-section" class="hidden">
+           <h2 class="text-xl font-bold mb-4">ห้อง: <span id="selected-room-display"></span></h2>
+           <div class="card p-0 overflow-hidden">
+             <table class="w-full text-left">
+               <thead class="bg-slate-800 text-white"><tr><th class="p-3">รหัส</th><th class="p-3">ชื่อ</th><th class="p-3">จัดการ</th></tr></thead>
+               <tbody id="student-table-body"></tbody>
+             </table>
+           </div>
+        </div>
+      </div>
+      
+      <div id="tab-2" class="tab-content hidden">
+        <div id="qr-container" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+      </div>
+
+      <div id="tab-4" class="tab-content hidden"><div class="card"><div id="pie_chart" class="h-96"></div></div></div>
+    </div>
+  </div>
+
+  <script>
+    // *** เปลี่ยน URL นี้ให้เป็น URL ของคุณ ***
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyKaLQ3wcGWfMQxljt4EYdkBnM-AUWDWIyK_4iX9ZfU3t7_vVQVD8TXpl8YWoIMWxQoA/exec';
+
+    let currentUser = null;
+    let currentSelectedRoom = "";
+    let html5QrCode = null;
+    let scannedStudent = null;
+    let isProcessing = false;
+
+    async function callGAS(action, data = {}) {
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action, data })
+        });
+        return await response.json();
+      } catch (e) {
+        console.error(e);
+        return { status: "error", message: "การเชื่อมต่อล้มเหลว" };
+      }
+    }
+
+    async function login() {
+      const u = document.getElementById('user').value;
+      const p = document.getElementById('pass').value;
+      const res = await callGAS('checkLogin', { username: u, password: p });
+      if(res.status === 'success') {
+        currentUser = res;
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('main-page').classList.remove('hidden');
+        document.getElementById('user-display').innerHTML = `สวัสดี, <b>${res.name}</b>`;
+        if(res.role === 'teacher') {
+          document.getElementById('teacher-menu').classList.remove('hidden');
+          loadRooms();
+        } else {
+          document.getElementById('student-menu').classList.remove('hidden');
+          showTab('tab-stu-1', document.querySelector('#student-menu .step'));
         }
+      } else {
+        document.getElementById('login-msg').innerText = res.message;
+      }
+    }
 
-        async function safeFetch(payload) {
-            try {
-                // สำหรับ Google Apps Script เราจะใช้ google.script.run จะดีกว่าและเสถียรกว่าการเรียก fetch กลับหาตัวเอง
-                return new Promise((resolve, reject) => {
-                    google.script.run
-                        .withSuccessHandler(resolve)
-                        .withFailureHandler(reject)
-                        .doPost({ postData: { contents: JSON.stringify(payload) } });
-                });
-            } catch (err) {
-                console.error("Fetch Error:", err);
-                throw err;
-            }
+    async function loadRooms() {
+      const rooms = await callGAS('getRoomsData');
+      let html = '';
+      rooms.forEach(room => {
+        html += `<button onclick="selectRoom('${room.name}')" class="rounded-xl py-4 text-white font-bold bg-gradient-to-br ${room.color}">${room.name}</button>`;
+      });
+      document.getElementById('room-buttons-container').innerHTML = html;
+    }
+
+    async function selectRoom(name) {
+      currentSelectedRoom = name;
+      document.getElementById('student-management-section').classList.remove('hidden');
+      document.getElementById('selected-room-display').innerText = name;
+      const students = await callGAS('getStudentsByRoom', { roomName: name });
+      let html = '';
+      students.forEach(s => {
+        html += `<tr class="border-b"><td class="p-3">${s.id}</td><td class="p-3">${s.name}</td><td class="p-3 text-red-500"><i class="fas fa-trash"></i></td></tr>`;
+      });
+      document.getElementById('student-table-body').innerHTML = html;
+    }
+
+    async function startScanner() {
+      if (html5QrCode) await html5QrCode.stop();
+      html5QrCode = new Html5Qrcode("reader");
+      scannedStudent = null;
+      document.getElementById('status-buttons').classList.add('hidden');
+      document.getElementById('scan-result').innerText = "วาง QR Code ให้ตรงกรอบ";
+
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, async (decodedText) => {
+        if (isProcessing) return;
+        isProcessing = true;
+        html5QrCode.pause();
+        const res = await callGAS('checkInByQR', { studentId: decodedText });
+        isProcessing = false;
+        if(res.status === 'success') {
+          scannedStudent = res;
+          document.getElementById('scan-result').innerHTML = `พบ: ${res.name} (${res.class})`;
+          document.getElementById('status-buttons').classList.remove('hidden');
+        } else {
+          Swal.fire('Error', res.message, 'error');
+          html5QrCode.resume();
         }
+      });
+    }
 
-        async function loadAssignments() {
-            const tbody = document.getElementById('assignment-list');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse">กำลังโหลดข้อมูล...</td></tr>';
-            
-            try {
-                const data = await safeFetch({ action: 'getAssignments' });
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400">ไม่มีข้อมูลใบงาน</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = data.map(item => `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4 font-medium text-blue-600">${item.courseId}</td>
-                        <td class="p-4 font-bold text-slate-700">${item.title}</td>
-                        <td class="p-4 text-center">
-                            <span class="font-bold text-slate-800">${item.fullScore}</span> / 
-                            <span class="text-emerald-500 font-bold">${item.passScore}</span>
-                        </td>
-                        <td class="p-4 text-slate-500">${item.dueDate}</td>
-                        <td class="p-4 text-center">
-                            <div class="flex justify-center gap-2">
-                                <button onclick='openEditModal(${JSON.stringify(item)})' class="bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1 rounded-lg text-sm font-bold transition">แก้ไข</button>
-                                <button onclick="deleteAssignment(${item.row})" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1 rounded-lg text-sm font-bold transition">ลบ</button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">เกิดข้อผิดพลาดในการโหลด</td></tr>';
-            }
-        }
+    async function submitStatus(status) {
+      if (!scannedStudent) return;
+      const msg = await callGAS('saveAttendance', { ...scannedStudent, status });
+      Swal.fire('สำเร็จ', msg, 'success');
+      startScanner();
+    }
 
-        function openAddModal() {
-            Swal.fire({
-                title: 'เพิ่มใบงานใหม่',
-                html: `
-                    <input id="add-course" class="swal2-input" placeholder="รหัสวิชา">
-                    <input id="add-title" class="swal2-input" placeholder="หัวข้อใบงาน">
-                    <input id="add-full" type="number" class="swal2-input" placeholder="คะแนนเต็ม">
-                    <input id="add-pass" type="number" class="swal2-input" placeholder="คะแนนผ่าน">
-                    <input id="add-date" type="date" class="swal2-input">
-                `,
-                confirmButtonText: 'ตกลง',
-                showCancelButton: true,
-                preConfirm: () => {
-                    return {
-                        action: 'addAssignment',
-                        courseId: document.getElementById('add-course').value,
-                        title: document.getElementById('add-title').value,
-                        fullScore: document.getElementById('add-full').value,
-                        passScore: document.getElementById('add-pass').value,
-                        dueDate: document.getElementById('add-date').value
-                    }
-                }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-                    await safeFetch(result.value);
-                    loadAssignments();
-                    Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 1000, showConfirmButton: false });
-                }
-            });
-        }
+    function showTab(id, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      if (id === 'tab-stu-1') startScanner();
+      if (id === 'tab-4') drawChart();
+    }
 
-        function openEditModal(item) {
-            Swal.fire({
-                title: 'แก้ไขใบงาน',
-                html: `
-                    <input id="edit-course" class="swal2-input" value="${item.courseId}">
-                    <input id="edit-title" class="swal2-input" value="${item.title}">
-                    <input id="edit-full" type="number" class="swal2-input" value="${item.fullScore}">
-                    <input id="edit-pass" type="number" class="swal2-input" value="${item.passScore}">
-                    <input id="edit-date" type="date" class="swal2-input" value="${item.dueDate}">
-                `,
-                showCancelButton: true,
-                preConfirm: () => ({
-                    action: 'updateAssignment',
-                    row: item.row,
-                    courseId: document.getElementById('edit-course').value,
-                    title: document.getElementById('edit-title').value,
-                    fullScore: document.getElementById('edit-full').value,
-                    passScore: document.getElementById('edit-pass').value,
-                    dueDate: document.getElementById('edit-date').value
-                })
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    await safeFetch(result.value);
-                    loadAssignments();
-                    Swal.fire({ icon: 'success', title: 'แก้ไขเรียบร้อย', timer: 1000, showConfirmButton: false });
-                }
-            });
-        }
-
-        async function deleteAssignment(row) {
-            const confirm = await Swal.fire({ title: 'ลบใบงานนี้?', icon: 'warning', showCancelButton: true });
-            if (confirm.isConfirmed) {
-                await safeFetch({ action: 'deleteAssignment', row: row });
-                loadAssignments();
-            }
-        }
-
-        async function exportReport() {
-            Swal.fire({ title: 'กำลังเตรียมไฟล์...', didOpen: () => Swal.showLoading() });
-            const data = await safeFetch({ action: 'getReport' });
-            let csv = "ID,Name,Nickname,Score\n";
-            data.students.forEach(s => csv += `${s.id},${s.name},${s.nickname},${s.score}\n`);
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "Report.csv";
-            link.click();
-            Swal.close();
-        }
-
-        window.onload = async () => {
-            const data = await safeFetch({ action: 'getReport' });
-            document.getElementById('stat-students').innerText = data.students.length;
-            document.getElementById('stat-assignments').innerText = data.assignments.length;
-        };
-    </script>
+    google.charts.load('current', {'packages':['corechart']});
+    async function drawChart() {
+      const data = await callGAS('getDashboardData');
+      const chartData = google.visualization.arrayToDataTable([
+        ['Status', 'Count'], ['มา', data.stats.มา], ['สาย', data.stats.สาย], ['ขาด', data.stats.ขาด], ['ลา', data.stats.ลา]
+      ]);
+      new google.visualization.PieChart(document.getElementById('pie_chart')).draw(chartData, { pieHole: 0.4 });
+    }
+  </script>
 </body>
 </html>
