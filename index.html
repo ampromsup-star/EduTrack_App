@@ -15,201 +15,184 @@
         .sidebar-item { @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 cursor-pointer transition; }
         .sidebar-item.active { @apply bg-blue-600 text-white shadow-lg shadow-blue-200; }
         .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6; }
-        .status-pill { @apply px-3 py-1 rounded-full text-[10px] font-bold uppercase; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body class="flex min-h-screen">
 
     <aside class="w-64 bg-white border-r border-gray-100 p-6 flex flex-col hidden lg:flex sticky top-0 h-screen">
         <div class="flex items-center gap-3 mb-10">
-            <div class="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-blue-200 shadow-lg">
-                <i class="fas fa-th-large text-white"></i>
+            <div class="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                <i class="fas fa-graduation-cap text-white"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold text-slate-800 leading-tight">EduTrack QR</h1>
-                <p class="text-[10px] text-gray-400 font-medium">Smart Attendance</p>
+                <h1 class="text-lg font-bold text-slate-800">EduTrack QR</h1>
+                <p class="text-[10px] text-gray-400">Smart Attendance</p>
             </div>
         </div>
         <nav class="space-y-2 flex-grow">
-            <div class="sidebar-item active" onclick="location.reload()"><i class="fas fa-home"></i>จัดการนักเรียน</div>
-            <div class="sidebar-item"><i class="fas fa-qrcode"></i>สร้าง QR</div>
-            <div class="sidebar-item"><i class="fas fa-chart-line"></i>สรุปผลการเข้าเรียน</div>
-            <div class="sidebar-item"><i class="fas fa-user-cog"></i>ตั้งค่าครู</div>
+            <div class="sidebar-item active" onclick="showTab('tab-students', this)"><i class="fas fa-users"></i>จัดการนักเรียน</div>
+            <div class="sidebar-item" onclick="showTab('tab-qr', this)"><i class="fas fa-qrcode"></i>สร้าง QR</div>
+            <div class="sidebar-item" onclick="showTab('tab-report', this)"><i class="fas fa-chart-pie"></i>สรุปผลการเข้าเรียน</div>
+            <div class="sidebar-item" onclick="showTab('tab-settings', this)"><i class="fas fa-user-cog"></i>ตั้งค่าครู</div>
         </nav>
-        <div class="pt-6 border-t border-gray-50">
-            <p class="text-[10px] text-gray-400 text-center">Version 2.1.0</p>
-        </div>
     </aside>
 
     <main class="flex-grow">
         <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-gray-50 p-4 px-8 flex justify-between items-center">
-            <button class="lg:hidden text-gray-400"><i class="fas fa-bars"></i></button>
-            <div class="flex items-center gap-4 ml-auto">
+            <h2 id="page-title" class="font-bold text-slate-800">แดชบอร์ดจัดการนักเรียน</h2>
+            <div class="flex items-center gap-3">
                 <div class="text-right">
-                    <p class="text-sm font-bold text-slate-700">สวัสดีครับ, ครูอนันต์</p>
-                    <p class="text-[10px] text-blue-500 font-semibold">Teacher</p>
+                    <p class="text-sm font-bold text-slate-700">ครูอนันต์</p>
+                    <p class="text-[10px] text-blue-500 font-semibold">Administrator</p>
                 </div>
-                <img src="https://i.pravatar.cc/150?u=teacher" class="w-10 h-10 rounded-full ring-2 ring-blue-50">
+                <img src="https://i.pravatar.cc/100?u=admin" class="w-10 h-10 rounded-full border-2 border-blue-100">
             </div>
         </header>
 
-        <div class="p-8 space-y-8">
+        <div id="tab-students" class="tab-content active p-8 space-y-8">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 card bg-gradient-to-br from-white to-blue-50/30">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2">ยินดีต้อนรับ, ครูอนันต์ 👋</h2>
-                    <p class="text-sm text-gray-500 mb-6">จัดการข้อมูลนักเรียนและการเข้าเรียนอย่างมีประสิทธิภาพ</p>
+                <div class="lg:col-span-2 card bg-gradient-to-br from-white to-blue-50/40">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">จัดการข้อมูลห้องเรียน 👋</h2>
                     <div class="flex gap-4">
-                        <button onclick="openScanner()" class="flex-1 bg-blue-600 text-white p-4 rounded-2xl shadow-lg shadow-blue-100 hover:scale-105 transition">
-                            <i class="fas fa-camera mb-2 text-xl"></i>
-                            <p class="text-xs font-bold">สแกนเข้าเรียน</p>
+                        <button onclick="openScanner()" class="flex-1 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:scale-105 transition">
+                            <i class="fas fa-camera mb-2 text-xl"></i><p class="text-xs font-bold">สแกนเข้าเรียน</p>
                         </button>
-                        <button onclick="openModal('student-modal')" class="flex-1 bg-emerald-500 text-white p-4 rounded-2xl shadow-lg shadow-emerald-100 hover:scale-105 transition">
-                            <i class="fas fa-user-plus mb-2 text-xl"></i>
-                            <p class="text-xs font-bold">เพิ่มนักเรียน</p>
+                        <button onclick="openModal('student-modal')" class="flex-1 bg-emerald-500 text-white p-4 rounded-2xl shadow-lg hover:scale-105 transition">
+                            <i class="fas fa-user-plus mb-2 text-xl"></i><p class="text-xs font-bold">เพิ่มนักเรียน</p>
                         </button>
-                        <button class="flex-1 bg-purple-500 text-white p-4 rounded-2xl shadow-lg shadow-purple-100 hover:scale-105 transition">
-                            <i class="fas fa-file-alt mb-2 text-xl"></i>
-                            <p class="text-xs font-bold">ดูรายงาน</p>
+                        <button onclick="openModal('room-modal')" class="flex-1 bg-purple-500 text-white p-4 rounded-2xl shadow-lg hover:scale-105 transition">
+                            <i class="fas fa-folder-plus mb-2 text-xl"></i><p class="text-xs font-bold">เพิ่มห้องเรียน</p>
                         </button>
                     </div>
                 </div>
-
-                <div class="card flex flex-col items-center justify-center">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4 self-start">สรุปภาพรวมวันนี้</h3>
+                <div class="card flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 self-start">สรุปเช็คชื่อวันนี้</h3>
                     <div class="relative w-32 h-32">
                         <canvas id="todayChart"></canvas>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <p class="text-[10px] text-gray-400">ทั้งหมด</p>
                             <p id="total-students-count" class="text-xl font-bold text-slate-800">0</p>
                         </div>
                     </div>
-                    <div id="chart-legend" class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 w-full">
-                        </div>
                 </div>
             </div>
 
             <section>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800">เลือกห้องเรียน</h3>
-                    <button onclick="openModal('room-modal')" class="text-xs text-blue-600 font-bold hover:underline">+ เพิ่มห้องเรียน</button>
-                </div>
+                <h3 class="font-bold text-slate-800 mb-4">รายชื่อห้องเรียน</h3>
                 <div id="room-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4"></div>
             </section>
 
-            <div class="card overflow-hidden border-none shadow-xl shadow-slate-200/50">
-                <div class="flex justify-between items-center mb-6 px-2">
+            <div class="card border-none shadow-xl">
+                <div class="flex justify-between items-center mb-6">
                     <h3 class="font-bold text-slate-800 text-lg">ห้องเรียน: <span id="current-room-name" class="text-blue-600">-</span></h3>
-                    <div class="flex gap-2">
-                        <button onclick="openScanner()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold"><i class="fas fa-camera mr-2"></i>สแกนเข้าเรียน</button>
-                        <button onclick="openModal('student-modal')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold"><i class="fas fa-plus mr-2"></i>เพิ่มนักเรียน</button>
-                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4">รหัสนักเรียน</th>
-                                <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                <th class="px-6 py-4">USERNAME</th>
-                                <th class="px-6 py-4">สถานะ</th>
-                                <th class="px-6 py-4 text-center">จัดการ</th>
-                            </tr>
+                        <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase">
+                            <tr><th class="px-6 py-4">รหัส</th><th class="px-6 py-4">ชื่อ-นามสกุล</th><th class="px-6 py-4">สถานะ</th><th class="px-6 py-4 text-center">จัดการ</th></tr>
                         </thead>
-                        <tbody id="student-table" class="text-sm text-slate-600 divide-y divide-slate-50"></tbody>
+                        <tbody id="student-table" class="text-sm divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
+        <div id="tab-qr" class="tab-content p-8"><div class="card">หน้าสร้าง QR Code (กำลังพัฒนา)</div></div>
+        <div id="tab-report" class="tab-content p-8"><div class="card">หน้าสรุปผลการเข้าเรียน (กำลังพัฒนา)</div></div>
+        <div id="tab-settings" class="tab-content p-8"><div class="card">หน้าตั้งค่าครู (กำลังพัฒนา)</div></div>
+
         <div id="room-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
-                <h3 class="text-xl font-bold text-slate-800 mb-6">เพิ่มห้องเรียนใหม่</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase">ชื่อห้องเรียน (เช่น ปวช.1/1)</label>
-                        <input type="text" id="new-room-name" class="w-full border border-slate-100 bg-slate-50 p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="ระบุชื่อห้อง">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase">เลือกสีปุ่ม</label>
-                        <select id="new-room-color" class="w-full border border-slate-100 bg-slate-50 p-3 rounded-xl outline-none">
-                            <option value="bg-blue-600">น้ำเงิน (Blue)</option>
-                            <option value="bg-emerald-500">เขียว (Emerald)</option>
-                            <option value="bg-amber-500">ส้ม (Amber)</option>
-                            <option value="bg-rose-500">แดง (Rose)</option>
-                            <option value="bg-purple-500">ม่วง (Purple)</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-3 pt-4">
-                        <button onclick="closeModal('room-modal')" class="flex-1 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50">ยกเลิก</button>
-                        <button onclick="submitNewRoom()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200">บันทึก</button>
-                    </div>
+            <div class="bg-white w-full max-w-md rounded-3xl p-8">
+                <h3 class="text-xl font-bold mb-6">เพิ่มห้องเรียนใหม่</h3>
+                <input type="text" id="new-room-name" class="w-full border p-3 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500" placeholder="ชื่อห้องเรียน (เช่น ปวช.1/1)">
+                <select id="new-room-color" class="w-full border p-3 rounded-xl mb-6">
+                    <option value="bg-blue-600">น้ำเงิน</option><option value="bg-emerald-500">เขียว</option><option value="bg-rose-500">แดง</option>
+                </select>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('room-modal')" class="flex-1 py-3 text-slate-400 font-bold">ยกเลิก</button>
+                    <button onclick="submitNewRoom()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">บันทึก</button>
                 </div>
             </div>
         </div>
 
         <div id="student-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
-                <h3 class="text-xl font-bold text-slate-800 mb-6">เพิ่มนักเรียนใหม่</h3>
-                <div class="space-y-4">
-                    <input type="text" id="new-std-id" placeholder="รหัสนักเรียน" class="w-full border border-slate-100 bg-slate-50 p-3 rounded-xl outline-none">
-                    <input type="text" id="new-std-name" placeholder="ชื่อ-นามสกุล" class="w-full border border-slate-100 bg-slate-50 p-3 rounded-xl outline-none">
-                    <div class="flex gap-3 pt-4">
-                        <button onclick="closeModal('student-modal')" class="flex-1 py-3 rounded-xl font-bold text-slate-400 hover:bg-slate-50">ยกเลิก</button>
-                        <button onclick="submitNewStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-emerald-200">เพิ่มรายชื่อ</button>
-                    </div>
+            <div class="bg-white w-full max-w-md rounded-3xl p-8">
+                <h3 class="text-xl font-bold mb-6">เพิ่มนักเรียนเข้า <span id="target-room-label" class="text-blue-600"></span></h3>
+                <input type="text" id="new-std-id" placeholder="รหัสนักเรียน" class="w-full border p-3 rounded-xl mb-4">
+                <input type="text" id="new-std-name" placeholder="ชื่อ-นามสกุล" class="w-full border p-3 rounded-xl mb-6">
+                <div class="flex gap-3">
+                    <button onclick="closeModal('student-modal')" class="flex-1 py-3 text-slate-400 font-bold">ยกเลิก</button>
+                    <button onclick="submitNewStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold">เพิ่มรายชื่อ</button>
                 </div>
             </div>
         </div>
 
         <div id="scanner-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-lg rounded-3xl p-6 relative overflow-hidden">
-                <button onclick="closeScanner()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
-                <h3 class="text-center font-bold text-slate-800 mb-6">สแกน QR Code เข้าเรียน</h3>
-                <div id="reader" class="rounded-2xl overflow-hidden bg-slate-100 aspect-video mb-6"></div>
-                <div id="scan-result" class="text-center py-4 rounded-2xl bg-blue-50 text-blue-600 font-bold mb-4 hidden"></div>
-                <div id="status-controls" class="grid grid-cols-2 gap-3 hidden">
-                    <button onclick="submitCheckin('มา')" class="bg-emerald-500 text-white p-3 rounded-xl font-bold">มา</button>
-                    <button onclick="submitCheckin('สาย')" class="bg-amber-500 text-white p-3 rounded-xl font-bold">สาย</button>
-                    <button onclick="submitCheckin('ขาด')" class="bg-rose-500 text-white p-3 rounded-xl font-bold">ขาด</button>
-                    <button onclick="submitCheckin('ลา')" class="bg-blue-500 text-white p-3 rounded-xl font-bold">ลา</button>
-                </div>
+            <div class="bg-white w-full max-w-lg rounded-3xl p-6 relative">
+                <div id="reader" class="rounded-2xl overflow-hidden bg-slate-100 aspect-video mb-4"></div>
+                <button onclick="closeScanner()" class="w-full py-3 text-slate-400 font-bold">ปิดหน้าต่าง</button>
             </div>
         </div>
     </main>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrBUW9hBiWqrjFz_6bUB3_AxOjTD9IJdhR0zo66eLAj-a6v7jxTNKTiQ2C6M_S5yOAeQ/exec';
-        let html5QrCode = null;
-        let lastScannedId = null;
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwglS-42k7MXZwXdsMv0yNDGqrNa1FvutsXEfbDCLAAY3HQ31s92e9IG_PmTLfGm6qg6A/exec';
         let myChart = null;
 
         window.onload = () => refreshDashboard();
 
+        // สลับหน้าจอ
+        function showTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+            document.getElementById('page-title').innerText = el.innerText;
+        }
+
         async function callGAS(action, data = {}) {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action, data })
-                });
-                return await response.json();
-            } catch (e) {
-                console.error("GAS Error:", e);
-                return { status: "error" };
-            }
+            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
+            return await response.json();
         }
 
         async function refreshDashboard() {
-            Swal.fire({ title: 'กำลังเชื่อมต่อ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            const response = await callGAS('getFullDashboard');
-            if (response && response.status !== 'error') {
-                updateChart(response.stats);
-                document.getElementById('total-students-count').innerText = response.total;
-                renderRooms(response.rooms);
-                if (response.rooms.length > 0) loadStudents(response.rooms[0].name);
+            Swal.fire({ title: 'กำลังโหลด...', didOpen: () => Swal.showLoading() });
+            const res = await callGAS('getFullDashboard');
+            if (res.status !== 'error') {
+                renderRooms(res.rooms);
+                updateChart(res.stats);
+                document.getElementById('total-students-count').innerText = res.total;
+                if (res.rooms.length > 0) loadStudents(res.rooms[0].name);
                 Swal.close();
-            } else {
-                Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อข้อมูลได้', 'error');
             }
+        }
+
+        function renderRooms(rooms) {
+            const container = document.getElementById('room-list');
+            container.innerHTML = rooms.map(r => `
+                <div onclick="loadStudents('${r.name}')" class="card p-4 cursor-pointer hover:border-blue-300 transition group">
+                    <div class="${r.color} w-full h-1.5 rounded-full mb-3"></div>
+                    <p class="font-bold text-slate-800 text-sm">${r.name}</p>
+                    <p class="text-[10px] text-gray-400">${r.count} คน</p>
+                </div>
+            `).join('');
+        }
+
+        async function loadStudents(roomName) {
+            document.getElementById('current-room-name').innerText = roomName;
+            document.getElementById('target-room-label').innerText = roomName;
+            const table = document.getElementById('student-table');
+            table.innerHTML = `<tr><td colspan="4" class="text-center p-10 text-gray-400">กำลังโหลด...</td></tr>`;
+            const students = await callGAS('getStudentsByRoom', { roomName });
+            table.innerHTML = students.length ? students.map(s => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
+                    <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 rounded-full text-[10px]">รอเช็คชื่อ</span></td>
+                    <td class="px-6 py-4 text-center text-slate-300"><i class="fas fa-edit mr-2"></i><i class="fas fa-trash"></i></td>
+                </tr>
+            `).join('') : `<tr><td colspan="4" class="text-center p-10 text-gray-400">ไม่มีข้อมูลนักเรียน</td></tr>`;
         }
 
         function updateChart(stats) {
@@ -218,77 +201,23 @@
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['มา', 'สาย', 'ขาด', 'ลา'],
                     datasets: [{
-                        data: [stats['มา'] || 0, stats['สาย'] || 0, stats['ขาด'] || 0, stats['ลา'] || 0],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
-                        borderWidth: 0,
-                        cutout: '80%'
+                        data: [stats['มา'], stats['สาย'], stats['ขาด'], stats['ลา']],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6']
                     }]
                 },
-                options: { plugins: { legend: { display: false } }, maintainAspectRatio: false }
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
             });
-            
-            const legend = document.getElementById('chart-legend');
-            legend.innerHTML = `
-                <div class="text-[10px] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> มา ${stats['มา'] || 0}</div>
-                <div class="text-[10px] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> สาย ${stats['สาย'] || 0}</div>
-                <div class="text-[10px] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> ขาด ${stats['ขาด'] || 0}</div>
-                <div class="text-[10px] flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> ลา ${stats['ลา'] || 0}</div>
-            `;
         }
 
-        function renderRooms(rooms) {
-            const container = document.getElementById('room-list');
-            container.innerHTML = rooms.map(r => `
-                <div onclick="loadStudents('${r.name}')" class="card p-4 cursor-pointer hover:border-blue-300 transition group relative">
-                    <div class="${r.color || 'bg-blue-600'} w-full h-1.5 rounded-full mb-3"></div>
-                    <p class="font-bold text-slate-800 text-sm mb-1">${r.name}</p>
-                    <p class="text-[10px] text-gray-400">${r.count || 0} คน</p>
-                </div>
-            `).join('');
-        }
-
-        async function loadStudents(roomName) {
-            document.getElementById('current-room-name').innerText = roomName;
-            const table = document.getElementById('student-table');
-            table.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400 italic">กำลังโหลดรายชื่อ...</td></tr>`;
-
-            const students = await callGAS('getStudentsByRoom', { roomName: roomName });
-            if (students && students.length > 0) {
-                table.innerHTML = students.map(s => {
-                    let statusColor = "text-gray-400 bg-gray-50";
-                    if(s.status === "มา") statusColor = "text-emerald-500 bg-emerald-50";
-                    return `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
-                        <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
-                        <td class="px-6 py-4 text-slate-400">${s.username || s.id}</td>
-                        <td class="px-6 py-4"><span class="status-pill ${statusColor}">${s.status || 'รอเช็คชื่อ'}</span></td>
-                        <td class="px-6 py-4 text-center text-slate-300">
-                            <button class="hover:text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
-                            <button class="hover:text-rose-500"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>`;
-                }).join('');
-            } else {
-                table.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400">ยังไม่มีนักเรียนในห้องนี้</td></tr>`;
-            }
-        }
-
-        // Modal Helpers
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
+        // Action บันทึก
         async function submitNewRoom() {
             const name = document.getElementById('new-room-name').value;
             const color = document.getElementById('new-room-color').value;
-            if(!name) return Swal.fire('เตือน', 'กรุณากรอกชื่อห้อง', 'warning');
-            Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-            await callGAS('addRoom', { name, color });
+            if(!name) return;
+            const res = await callGAS('addRoom', { name, color });
+            if(res.status === 'error') return Swal.fire('ผิดพลาด', res.message, 'error');
             closeModal('room-modal');
-            document.getElementById('new-room-name').value = '';
-            Swal.fire('สำเร็จ', 'เพิ่มห้องเรียนเรียบร้อย', 'success');
             refreshDashboard();
         }
 
@@ -296,53 +225,14 @@
             const id = document.getElementById('new-std-id').value;
             const name = document.getElementById('new-std-name').value;
             const room = document.getElementById('current-room-name').innerText;
-            if(!id || !name) return Swal.fire('เตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
-            Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+            if(!id || !name) return;
             await callGAS('addStudent', { id, name, room });
             closeModal('student-modal');
-            document.getElementById('new-std-id').value = '';
-            document.getElementById('new-std-name').value = '';
-            Swal.fire('สำเร็จ', 'เพิ่มนักเรียนแล้ว', 'success');
             loadStudents(room);
         }
 
-        // Scanner
-        function openScanner() {
-            document.getElementById('scanner-modal').classList.remove('hidden');
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
-        }
-
-        function onScanSuccess(decodedText) {
-            lastScannedId = decodedText;
-            const resultBox = document.getElementById('scan-result');
-            resultBox.innerText = "พบรหัส: " + decodedText;
-            resultBox.classList.remove('hidden');
-            document.getElementById('status-controls').classList.remove('hidden');
-            if (html5QrCode) html5QrCode.pause();
-        }
-
-        async function submitCheckin(status) {
-            const room = document.getElementById('current-room-name').innerText;
-            Swal.fire({ title: 'บันทึก...', didOpen: () => Swal.showLoading() });
-            // ดึงชื่อนักเรียนเบื้องต้น (หรือให้ Backend หาเอง)
-            await callGAS('saveAttendance', { studentId: lastScannedId, status: status, class: room });
-            closeScanner();
-            Swal.fire({ icon: 'success', title: 'เช็คชื่อสำเร็จ', timer: 1000 });
-            refreshDashboard();
-        }
-
-        function closeScanner() {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    document.getElementById('scanner-modal').classList.add('hidden');
-                    document.getElementById('status-controls').classList.add('hidden');
-                    document.getElementById('scan-result').classList.add('hidden');
-                });
-            } else {
-                document.getElementById('scanner-modal').classList.add('hidden');
-            }
-        }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     </script>
 </body>
 </html>
