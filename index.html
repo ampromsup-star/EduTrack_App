@@ -11,45 +11,51 @@
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
         body { font-family: 'Sarabun', sans-serif; background-color: #f3f6f9; }
         .sidebar-item { @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 cursor-pointer transition; }
-        .sidebar-item.active { @apply bg-blue-600 text-white shadow-lg; }
+        .sidebar-item.active { @apply bg-blue-600 text-white shadow-lg shadow-blue-200; }
         .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-    <aside class="w-64 bg-white border-r p-6 hidden lg:flex flex-col sticky top-0 h-screen">
+    <aside class="w-64 bg-white border-r border-gray-100 p-6 flex flex-col hidden lg:flex sticky top-0 h-screen">
         <div class="flex items-center gap-3 mb-10">
-            <div class="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center text-white"><i class="fas fa-graduation-cap"></i></div>
-            <h1 class="text-lg font-bold">EduTrack QR</h1>
+            <div class="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                <i class="fas fa-graduation-cap text-white"></i>
+            </div>
+            <div><h1 class="text-lg font-bold text-slate-800">EduTrack QR</h1></div>
         </div>
-        <nav class="space-y-2">
-            <div class="sidebar-item active"><i class="fas fa-users"></i>จัดการนักเรียน</div>
+        <nav class="space-y-2 flex-grow">
+            <div class="sidebar-item active" onclick="showTab('tab-students', this)"><i class="fas fa-users"></i>จัดการนักเรียน</div>
+            <div class="sidebar-item" onclick="showTab('tab-qr', this)"><i class="fas fa-qrcode"></i>สร้าง QR</div>
+            <div class="sidebar-item" onclick="showTab('tab-report', this)"><i class="fas fa-chart-pie"></i>สรุปผลการเข้าเรียน</div>
         </nav>
     </aside>
 
     <main class="flex-grow p-8">
-        <div class="max-w-6xl mx-auto space-y-8">
-            <header class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-slate-800">ระบบจัดการข้อมูล</h2>
-                <div class="flex gap-3">
-                    <button onclick="openModal('room-modal')" class="bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fas fa-plus mr-2"></i>ห้องเรียน</button>
-                    <button onclick="openModal('student-modal')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold"><i class="fas fa-user-plus mr-2"></i>นักเรียน</button>
-                </div>
-            </header>
+        <header class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดจัดการ</h2>
+            <div class="flex gap-3">
+                <button onclick="openModal('room-modal')" class="bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-bold">เพิ่มห้องเรียน</button>
+                <button onclick="openModal('student-modal')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold">เพิ่มนักเรียน</button>
+            </div>
+        </header>
 
+        <div id="tab-students" class="tab-content active space-y-8">
             <section>
-                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider">รายชื่อห้องเรียน (คลิกเพื่อดูนักเรียน / กดค้างหรือไอคอนเพื่อจัดการ)</h3>
+                <h3 class="font-bold text-slate-700 mb-4 text-sm">รายชื่อห้องเรียน</h3>
                 <div id="room-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
             </section>
 
-            <div class="card">
-                <h3 class="font-bold text-lg mb-6 text-slate-800">รายชื่อนักเรียน: <span id="current-room-name" class="text-blue-600">-</span></h3>
+            <div class="card overflow-hidden">
+                <h3 class="font-bold text-lg mb-6">ห้องเรียน: <span id="current-room-name" class="text-blue-600">-</span></h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase">
                             <tr><th class="px-6 py-4">รหัส</th><th class="px-6 py-4">ชื่อ-นามสกุล</th><th class="px-6 py-4 text-center">จัดการ</th></tr>
                         </thead>
-                        <tbody id="student-table" class="divide-y"></tbody>
+                        <tbody id="student-table" class="divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
             </div>
@@ -57,38 +63,44 @@
 
         <div id="room-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50">
             <div class="bg-white w-full max-w-md rounded-3xl p-8">
-                <h3 id="room-modal-title" class="text-xl font-bold mb-6">เพิ่มห้องเรียน</h3>
-                <input type="hidden" id="edit-old-room">
-                <input type="text" id="room-name" class="w-full border p-3 rounded-xl mb-4" placeholder="ชื่อห้องเรียน">
-                <select id="room-color" class="w-full border p-3 rounded-xl mb-6">
+                <h3 class="text-xl font-bold mb-6">เพิ่มห้องเรียน</h3>
+                <input type="text" id="new-room-name" class="w-full border p-3 rounded-xl mb-4" placeholder="ชื่อห้องเรียน">
+                <select id="new-room-color" class="w-full border p-3 rounded-xl mb-6">
                     <option value="bg-blue-600">น้ำเงิน</option><option value="bg-emerald-500">เขียว</option><option value="bg-rose-500">แดง</option>
                 </select>
                 <div class="flex gap-3">
-                    <button onclick="closeModal('room-modal')" class="flex-1 py-3 text-slate-400">ยกเลิก</button>
-                    <button id="room-btn" onclick="submitRoom()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">บันทึก</button>
+                    <button onclick="closeModal('room-modal')" class="flex-1 py-3">ยกเลิก</button>
+                    <button onclick="submitNewRoom()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">บันทึก</button>
                 </div>
             </div>
         </div>
 
         <div id="student-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50">
             <div class="bg-white w-full max-w-md rounded-3xl p-8">
-                <h3 id="std-modal-title" class="text-xl font-bold mb-6">จัดการนักเรียน</h3>
+                <h3 id="std-title" class="text-xl font-bold mb-6">ข้อมูลนักเรียน</h3>
                 <input type="hidden" id="edit-old-id">
-                <input type="text" id="std-id" placeholder="รหัสนักเรียน" class="w-full border p-3 rounded-xl mb-4">
-                <input type="text" id="std-name" placeholder="ชื่อ-นามสกุล" class="w-full border p-3 rounded-xl mb-6">
+                <input type="text" id="new-std-id" placeholder="รหัสนักเรียน" class="w-full border p-3 rounded-xl mb-4">
+                <input type="text" id="new-std-name" placeholder="ชื่อ-นามสกุล" class="w-full border p-3 rounded-xl mb-6">
                 <div class="flex gap-3">
-                    <button onclick="closeModal('student-modal')" class="flex-1 py-3 text-slate-400">ยกเลิก</button>
-                    <button id="std-btn" onclick="submitStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold">ตกลง</button>
+                    <button onclick="closeModal('student-modal')" class="flex-1 py-3">ยกเลิก</button>
+                    <button id="std-btn" onclick="submitStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold">บันทึก</button>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxslXlMzikCn5jRduJ9xNIyPox6G0Rjq3QKfvEtqvXtXsQjEtucSLeWKk8La0Udlow2NQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpufS7zHG9oIDaC3pP3M0r5mZJdxdxadw4xymlzEsiiwk2HdKw0WFtXWf_bBrtTloFVA/exec';
         let currentRoom = '';
 
         window.onload = () => refreshDashboard();
+
+        function showTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
 
         async function callGAS(action, data = {}) {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
@@ -105,16 +117,12 @@
 
         function renderRooms(rooms) {
             document.getElementById('room-list').innerHTML = rooms.map(r => `
-                <div class="card p-4 cursor-pointer hover:shadow-md transition relative group">
+                <div class="card p-4 cursor-pointer hover:border-blue-300 transition relative group">
                     <div onclick="loadStudents('${r.name}')">
                         <div class="${r.color} w-full h-1.5 rounded-full mb-3"></div>
                         <p class="font-bold text-slate-800 text-sm">${r.name}</p>
-                        <p class="text-[10px] text-gray-400">${r.count} คน</p>
                     </div>
-                    <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                        <button onclick="openEditRoom('${r.name}', '${r.color}')" class="text-blue-500 text-[10px] bg-blue-50 p-1 rounded">แก้ไข</button>
-                        <button onclick="deleteRoom('${r.name}')" class="text-rose-500 text-[10px] bg-rose-50 p-1 rounded">ลบ</button>
-                    </div>
+                    <button onclick="deleteRoom('${r.name}')" class="absolute top-2 right-2 text-rose-300 opacity-0 group-hover:opacity-100"><i class="fas fa-trash-alt"></i></button>
                 </div>
             `).join('');
         }
@@ -124,7 +132,7 @@
             document.getElementById('current-room-name').innerText = roomName;
             const students = await callGAS('getStudentsByRoom', { roomName });
             document.getElementById('student-table').innerHTML = students.map(s => `
-                <tr>
+                <tr class="hover:bg-slate-50">
                     <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
                     <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
                     <td class="px-6 py-4 text-center">
@@ -135,26 +143,26 @@
             `).join('');
         }
 
-        // Student Actions
+        // Logic แก้ไข: ถ้ามี oldId จะเป็นการแก้ไข ถ้าไม่มีจะเป็นการเพิ่ม
         function openEditStudent(id, name) {
-            document.getElementById('std-modal-title').innerText = 'แก้ไขนักเรียน';
+            document.getElementById('std-title').innerText = 'แก้ไขข้อมูลนักเรียน';
             document.getElementById('edit-old-id').value = id;
-            document.getElementById('std-id').value = id;
-            document.getElementById('std-name').value = name;
-            document.getElementById('std-btn').onclick = async () => {
-                const data = { oldId: id, id: document.getElementById('std-id').value, name: document.getElementById('std-name').value };
-                await callGAS('editStudent', data);
-                closeModal('student-modal');
-                loadStudents(currentRoom);
-            };
+            document.getElementById('new-std-id').value = id;
+            document.getElementById('new-std-name').value = name;
             openModal('student-modal');
         }
 
         async function submitStudent() {
-            const data = { id: document.getElementById('std-id').value, name: document.getElementById('std-name').value, room: currentRoom };
-            await callGAS('addStudent', data);
+            const oldId = document.getElementById('edit-old-id').value;
+            const id = document.getElementById('new-std-id').value;
+            const name = document.getElementById('new-std-name').value;
+            
+            if (oldId) {
+                await callGAS('editStudent', { oldId, id, name });
+            } else {
+                await callGAS('addStudent', { id, name, room: currentRoom });
+            }
             closeModal('student-modal');
-            refreshDashboard();
             loadStudents(currentRoom);
         }
 
@@ -165,51 +173,33 @@
             }
         }
 
-        // Room Actions
-        function openEditRoom(name, color) {
-            document.getElementById('room-modal-title').innerText = 'แก้ไขห้องเรียน';
-            document.getElementById('edit-old-room').value = name;
-            document.getElementById('room-name').value = name;
-            document.getElementById('room-color').value = color;
-            document.getElementById('room-btn').onclick = async () => {
-                const data = { oldName: name, newName: document.getElementById('room-name').value, color: document.getElementById('room-color').value };
-                await callGAS('editRoom', data);
-                closeModal('room-modal');
-                currentRoom = data.newName;
-                refreshDashboard();
-            };
-            openModal('room-modal');
-        }
-
-        async function submitRoom() {
-            const data = { name: document.getElementById('room-name').value, color: document.getElementById('room-color').value };
-            const res = await callGAS('addRoom', data);
+        async function submitNewRoom() {
+            const name = document.getElementById('new-room-name').value;
+            const color = document.getElementById('new-room-color').value;
+            const res = await callGAS('addRoom', { name, color });
             if(res.status === 'error') return alert(res.message);
             closeModal('room-modal');
             refreshDashboard();
         }
 
         async function deleteRoom(name) {
-            if (confirm('ลบห้อง ' + name + ' และนักเรียนทั้งหมดในห้องนี้?')) {
+            if (confirm('ลบห้อง ' + name + '?')) {
                 await callGAS('deleteRoom', { name });
-                currentRoom = '';
                 refreshDashboard();
             }
         }
 
-        function openModal(id) {
+        function openModal(id) { 
             if(id === 'student-modal' && !document.getElementById('edit-old-id').value) {
-                document.getElementById('std-modal-title').innerText = 'เพิ่มนักเรียนใหม่';
-                document.getElementById('std-id').value = '';
-                document.getElementById('std-name').value = '';
-                document.getElementById('std-btn').onclick = submitStudent;
+                document.getElementById('std-title').innerText = 'เพิ่มนักเรียนใหม่';
+                document.getElementById('new-std-id').value = '';
+                document.getElementById('new-std-name').value = '';
             }
             document.getElementById(id).classList.remove('hidden'); 
         }
         function closeModal(id) { 
             document.getElementById(id).classList.add('hidden'); 
-            document.getElementById('edit-old-id').value = '';
-            document.getElementById('edit-old-room').value = '';
+            document.getElementById('edit-old-id').value = ''; 
         }
     </script>
 </body>
