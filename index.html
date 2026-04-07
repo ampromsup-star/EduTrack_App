@@ -26,35 +26,25 @@
             <div class="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                 <i class="fas fa-graduation-cap text-white"></i>
             </div>
-            <div>
-                <h1 class="text-lg font-bold text-slate-800">EduTrack QR</h1>
-                <p class="text-[10px] text-gray-400">Smart Attendance</p>
-            </div>
+            <div><h1 class="text-lg font-bold text-slate-800">EduTrack QR</h1><p class="text-[10px] text-gray-400">Smart Attendance</p></div>
         </div>
         <nav class="space-y-2 flex-grow">
             <div class="sidebar-item active" onclick="showTab('tab-students', this)"><i class="fas fa-users"></i>จัดการนักเรียน</div>
             <div class="sidebar-item" onclick="showTab('tab-qr', this)"><i class="fas fa-qrcode"></i>สร้าง QR</div>
             <div class="sidebar-item" onclick="showTab('tab-report', this)"><i class="fas fa-chart-pie"></i>สรุปผลการเข้าเรียน</div>
-            <div class="sidebar-item" onclick="showTab('tab-settings', this)"><i class="fas fa-user-cog"></i>ตั้งค่าครู</div>
         </nav>
     </aside>
 
     <main class="flex-grow">
         <header class="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-gray-50 p-4 px-8 flex justify-between items-center">
             <h2 id="page-title" class="font-bold text-slate-800">แดชบอร์ดจัดการนักเรียน</h2>
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <p class="text-sm font-bold text-slate-700">ครูอนันต์</p>
-                    <p class="text-[10px] text-blue-500 font-semibold">Administrator</p>
-                </div>
-                <img src="https://i.pravatar.cc/100?u=admin" class="w-10 h-10 rounded-full border-2 border-blue-100">
-            </div>
+            <div class="flex items-center gap-3"><div class="text-right"><p class="text-sm font-bold text-slate-700">ครูอนันต์</p><p class="text-[10px] text-blue-500 font-semibold">Teacher</p></div><img src="https://i.pravatar.cc/100?u=admin" class="w-10 h-10 rounded-full border-2 border-blue-100"></div>
         </header>
 
         <div id="tab-students" class="tab-content active p-8 space-y-8">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 card bg-gradient-to-br from-white to-blue-50/40">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-6">จัดการข้อมูลห้องเรียน 👋</h2>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">ยินดีต้อนรับ 👋</h2>
                     <div class="flex gap-4">
                         <button onclick="openScanner()" class="flex-1 bg-blue-600 text-white p-4 rounded-2xl shadow-lg hover:scale-105 transition">
                             <i class="fas fa-camera mb-2 text-xl"></i><p class="text-xs font-bold">สแกนเข้าเรียน</p>
@@ -68,13 +58,8 @@
                     </div>
                 </div>
                 <div class="card flex flex-col items-center">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4 self-start">สรุปเช็คชื่อวันนี้</h3>
-                    <div class="relative w-32 h-32">
-                        <canvas id="todayChart"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <p id="total-students-count" class="text-xl font-bold text-slate-800">0</p>
-                        </div>
-                    </div>
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 self-start">เช็คชื่อวันนี้</h3>
+                    <div class="relative w-32 h-32"><canvas id="todayChart"></canvas><div class="absolute inset-0 flex flex-col items-center justify-center"><p id="total-students-count" class="text-xl font-bold text-slate-800">0</p></div></div>
                 </div>
             </div>
 
@@ -84,13 +69,11 @@
             </section>
 
             <div class="card border-none shadow-xl">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-slate-800 text-lg">ห้องเรียน: <span id="current-room-name" class="text-blue-600">-</span></h3>
-                </div>
+                <h3 class="font-bold text-slate-800 text-lg mb-6">ห้องเรียน: <span id="current-room-name" class="text-blue-600">-</span></h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase">
-                            <tr><th class="px-6 py-4">รหัส</th><th class="px-6 py-4">ชื่อ-นามสกุล</th><th class="px-6 py-4">สถานะ</th><th class="px-6 py-4 text-center">จัดการ</th></tr>
+                            <tr><th class="px-6 py-4">รหัส</th><th class="px-6 py-4">ชื่อ-นามสกุล</th><th class="px-6 py-4 text-center">จัดการ</th></tr>
                         </thead>
                         <tbody id="student-table" class="text-sm divide-y divide-slate-50"></tbody>
                     </table>
@@ -98,19 +81,15 @@
             </div>
         </div>
 
-        <div id="tab-qr" class="tab-content p-8"><div class="card">หน้าสร้าง QR Code (กำลังพัฒนา)</div></div>
-        <div id="tab-report" class="tab-content p-8"><div class="card">หน้าสรุปผลการเข้าเรียน (กำลังพัฒนา)</div></div>
-        <div id="tab-settings" class="tab-content p-8"><div class="card">หน้าตั้งค่าครู (กำลังพัฒนา)</div></div>
-
         <div id="room-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-md rounded-3xl p-8">
                 <h3 class="text-xl font-bold mb-6">เพิ่มห้องเรียนใหม่</h3>
-                <input type="text" id="new-room-name" class="w-full border p-3 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500" placeholder="ชื่อห้องเรียน (เช่น ปวช.1/1)">
+                <input type="text" id="new-room-name" class="w-full border p-3 rounded-xl mb-4" placeholder="ชื่อห้องเรียน (ห้ามซ้ำ)">
                 <select id="new-room-color" class="w-full border p-3 rounded-xl mb-6">
                     <option value="bg-blue-600">น้ำเงิน</option><option value="bg-emerald-500">เขียว</option><option value="bg-rose-500">แดง</option>
                 </select>
                 <div class="flex gap-3">
-                    <button onclick="closeModal('room-modal')" class="flex-1 py-3 text-slate-400 font-bold">ยกเลิก</button>
+                    <button onclick="closeModal('room-modal')" class="flex-1 py-3 text-slate-400">ยกเลิก</button>
                     <button onclick="submitNewRoom()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">บันทึก</button>
                 </div>
             </div>
@@ -118,37 +97,30 @@
 
         <div id="student-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-md rounded-3xl p-8">
-                <h3 class="text-xl font-bold mb-6">เพิ่มนักเรียนเข้า <span id="target-room-label" class="text-blue-600"></span></h3>
+                <h3 id="std-modal-title" class="text-xl font-bold mb-6">เพิ่มนักเรียน</h3>
+                <input type="hidden" id="edit-old-id">
                 <input type="text" id="new-std-id" placeholder="รหัสนักเรียน" class="w-full border p-3 rounded-xl mb-4">
                 <input type="text" id="new-std-name" placeholder="ชื่อ-นามสกุล" class="w-full border p-3 rounded-xl mb-6">
                 <div class="flex gap-3">
-                    <button onclick="closeModal('student-modal')" class="flex-1 py-3 text-slate-400 font-bold">ยกเลิก</button>
-                    <button onclick="submitNewStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold">เพิ่มรายชื่อ</button>
+                    <button onclick="closeModal('student-modal')" class="flex-1 py-3 text-slate-400">ยกเลิก</button>
+                    <button id="std-submit-btn" onclick="submitNewStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold">ตกลง</button>
                 </div>
-            </div>
-        </div>
-
-        <div id="scanner-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-lg rounded-3xl p-6 relative">
-                <div id="reader" class="rounded-2xl overflow-hidden bg-slate-100 aspect-video mb-4"></div>
-                <button onclick="closeScanner()" class="w-full py-3 text-slate-400 font-bold">ปิดหน้าต่าง</button>
             </div>
         </div>
     </main>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwglS-42k7MXZwXdsMv0yNDGqrNa1FvutsXEfbDCLAAY3HQ31s92e9IG_PmTLfGm6qg6A/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9jAOw0GuB6pyTGq3m32SRfdWCHTudDK0ADJbdFvElq4f9Q0YPuhViFvwbesBTJq47iA/exec';
         let myChart = null;
+        let currentRoom = '';
 
         window.onload = () => refreshDashboard();
 
-        // สลับหน้าจอ
         function showTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('page-title').innerText = el.innerText;
         }
 
         async function callGAS(action, data = {}) {
@@ -157,82 +129,114 @@
         }
 
         async function refreshDashboard() {
-            Swal.fire({ title: 'กำลังโหลด...', didOpen: () => Swal.showLoading() });
             const res = await callGAS('getFullDashboard');
-            if (res.status !== 'error') {
+            if (res.status === 'success') {
                 renderRooms(res.rooms);
                 updateChart(res.stats);
                 document.getElementById('total-students-count').innerText = res.total;
-                if (res.rooms.length > 0) loadStudents(res.rooms[0].name);
-                Swal.close();
+                if (!currentRoom && res.rooms.length > 0) loadStudents(res.rooms[0].name);
+                else if(currentRoom) loadStudents(currentRoom);
             }
         }
 
         function renderRooms(rooms) {
             const container = document.getElementById('room-list');
             container.innerHTML = rooms.map(r => `
-                <div onclick="loadStudents('${r.name}')" class="card p-4 cursor-pointer hover:border-blue-300 transition group">
-                    <div class="${r.color} w-full h-1.5 rounded-full mb-3"></div>
-                    <p class="font-bold text-slate-800 text-sm">${r.name}</p>
-                    <p class="text-[10px] text-gray-400">${r.count} คน</p>
+                <div class="card p-4 cursor-pointer hover:border-blue-300 transition relative group">
+                    <div onclick="loadStudents('${r.name}')">
+                        <div class="${r.color} w-full h-1.5 rounded-full mb-3"></div>
+                        <p class="font-bold text-slate-800 text-sm">${r.name}</p>
+                        <p class="text-[10px] text-gray-400">${r.count} คน</p>
+                    </div>
+                    <button class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-blue-600 transition">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
                 </div>
             `).join('');
         }
 
         async function loadStudents(roomName) {
+            currentRoom = roomName;
             document.getElementById('current-room-name').innerText = roomName;
-            document.getElementById('target-room-label').innerText = roomName;
             const table = document.getElementById('student-table');
-            table.innerHTML = `<tr><td colspan="4" class="text-center p-10 text-gray-400">กำลังโหลด...</td></tr>`;
             const students = await callGAS('getStudentsByRoom', { roomName });
-            table.innerHTML = students.length ? students.map(s => `
+            table.innerHTML = students.map(s => `
                 <tr class="hover:bg-slate-50">
                     <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
                     <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 bg-gray-100 rounded-full text-[10px]">รอเช็คชื่อ</span></td>
-                    <td class="px-6 py-4 text-center text-slate-300"><i class="fas fa-edit mr-2"></i><i class="fas fa-trash"></i></td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="openEditStudent('${s.id}', '${s.name}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteStudent('${s.id}')" class="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition ml-2"><i class="fas fa-trash"></i></button>
+                    </td>
                 </tr>
-            `).join('') : `<tr><td colspan="4" class="text-center p-10 text-gray-400">ไม่มีข้อมูลนักเรียน</td></tr>`;
+            `).join('');
         }
+
+        async function submitNewRoom() {
+            const name = document.getElementById('new-room-name').value;
+            const color = document.getElementById('new-room-color').value;
+            if(!name) return;
+            const res = await callGAS('addRoom', { name, color });
+            if(res.status === 'error') return Swal.fire('เตือน', res.message, 'warning');
+            closeModal('room-modal');
+            refreshDashboard();
+        }
+
+        function openEditStudent(id, name) {
+            document.getElementById('std-modal-title').innerText = 'แก้ไขข้อมูลนักเรียน';
+            document.getElementById('edit-old-id').value = id;
+            document.getElementById('new-std-id').value = id;
+            document.getElementById('new-std-name').value = name;
+            document.getElementById('std-submit-btn').onclick = submitEditStudent;
+            openModal('student-modal');
+        }
+
+        async function submitEditStudent() {
+            const data = {
+                oldId: document.getElementById('edit-old-id').value,
+                id: document.getElementById('new-std-id').value,
+                name: document.getElementById('new-std-name').value
+            };
+            await callGAS('editStudent', data);
+            closeModal('student-modal');
+            loadStudents(currentRoom);
+        }
+
+        async function deleteStudent(id) {
+            const result = await Swal.fire({ title: 'ยืนยันการลบ?', text: "ข้อมูลนักเรียนจะถูกลบถาวร", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน' });
+            if (result.isConfirmed) {
+                await callGAS('deleteStudent', { id });
+                loadStudents(currentRoom);
+            }
+        }
+
+        async function submitNewStudent() {
+            const data = { id: document.getElementById('new-std-id').value, name: document.getElementById('new-std-name').value, room: currentRoom };
+            await callGAS('addStudent', data);
+            closeModal('student-modal');
+            refreshDashboard();
+        }
+
+        function openModal(id) {
+            if(id === 'student-modal') {
+                document.getElementById('std-modal-title').innerText = 'เพิ่มนักเรียนใหม่';
+                document.getElementById('new-std-id').value = '';
+                document.getElementById('new-std-name').value = '';
+                document.getElementById('std-submit-btn').onclick = submitNewStudent;
+            }
+            document.getElementById(id).classList.remove('hidden'); 
+        }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         function updateChart(stats) {
             const ctx = document.getElementById('todayChart').getContext('2d');
             if (myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [stats['มา'], stats['สาย'], stats['ขาด'], stats['ลา']],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6']
-                    }]
-                },
+                data: { datasets: [{ data: [stats['มา'] || 0, stats['สาย'] || 0, stats['ขาด'] || 0, stats['ลา'] || 0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'] }] },
                 options: { cutout: '80%', plugins: { legend: { display: false } } }
             });
         }
-
-        // Action บันทึก
-        async function submitNewRoom() {
-            const name = document.getElementById('new-room-name').value;
-            const color = document.getElementById('new-room-color').value;
-            if(!name) return;
-            const res = await callGAS('addRoom', { name, color });
-            if(res.status === 'error') return Swal.fire('ผิดพลาด', res.message, 'error');
-            closeModal('room-modal');
-            refreshDashboard();
-        }
-
-        async function submitNewStudent() {
-            const id = document.getElementById('new-std-id').value;
-            const name = document.getElementById('new-std-name').value;
-            const room = document.getElementById('current-room-name').innerText;
-            if(!id || !name) return;
-            await callGAS('addStudent', { id, name, room });
-            closeModal('student-modal');
-            loadStudents(room);
-        }
-
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     </script>
 </body>
 </html>
