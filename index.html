@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduTrack QR</title>
+    <title>EduTrack QR - Teacher System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -15,101 +15,200 @@
         .card { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        .btn-action { @apply p-2 rounded-lg transition-colors; }
     </style>
 </head>
 <body class="flex min-h-screen">
+
+    <div id="login-page" class="fixed inset-0 bg-slate-50 z-[100] flex items-center justify-center p-6">
+        <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl">
+            <div class="text-center">
+                <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 mx-auto mb-4">
+                    <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800">EduTrack Login</h1>
+                <p class="text-slate-500 mt-2">กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูล</p>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="login-user" placeholder="ชื่อผู้ใช้" class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="password" id="login-pass" placeholder="รหัสผ่าน" class="w-full border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">เข้าสู่ระบบ</button>
+            </div>
+        </div>
+    </div>
 
     <aside class="w-64 bg-white border-r border-gray-100 p-6 flex flex-col hidden lg:flex sticky top-0 h-screen">
         <div class="flex items-center gap-3 mb-10">
             <div class="bg-blue-600 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                 <i class="fas fa-graduation-cap text-white"></i>
             </div>
-            <div><h1 class="text-lg font-bold text-slate-800">EduTrack QR</h1></div>
+            <h1 class="text-lg font-bold text-slate-800">EduTrack QR</h1>
         </div>
         <nav class="space-y-2 flex-grow">
-            <div class="sidebar-item active" onclick="showTab('tab-students', this)"><i class="fas fa-users"></i>จัดการนักเรียน</div>
-            <div class="sidebar-item" onclick="showTab('tab-qr', this)"><i class="fas fa-qrcode"></i>สร้าง QR</div>
-            <div class="sidebar-item" onclick="showTab('tab-report', this)"><i class="fas fa-chart-pie"></i>สรุปผลการเข้าเรียน</div>
+            <div class="sidebar-item active" onclick="showTab('tab-students', this)"><i class="fas fa-users"></i>จัดการข้อมูล</div>
+            <div class="sidebar-item" onclick="showTab('tab-scan', this)"><i class="fas fa-qrcode"></i>สแกนมาเรียน/ส่งงาน</div>
+            <div class="sidebar-item" onclick="showTab('tab-report', this)"><i class="fas fa-chart-line"></i>รายงาน Real-time</div>
         </nav>
+        <button onclick="location.reload()" class="text-rose-500 text-sm font-bold mt-auto hover:bg-rose-50 p-3 rounded-xl transition">
+            <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+        </button>
     </aside>
 
     <main class="flex-grow p-8">
-        <header class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดจัดการ</h2>
-            <div class="flex gap-3">
-                <button onclick="openModal('room-modal')" class="bg-purple-500 text-white px-4 py-2 rounded-xl text-sm font-bold">เพิ่มห้องเรียน</button>
-                <button onclick="openModal('student-modal')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold">เพิ่มนักเรียน</button>
-            </div>
-        </header>
-
+        
         <div id="tab-students" class="tab-content active space-y-8">
+            <header class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-slate-800">จัดการข้อมูล</h2>
+                <div class="flex gap-3">
+                    <button onclick="openRoomModal()" class="bg-purple-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-purple-600 transition">เพิ่มห้องเรียน</button>
+                    <button onclick="openStudentModal()" class="bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-600 transition">เพิ่มนักเรียน</button>
+                </div>
+            </header>
+
             <section>
-                <h3 class="font-bold text-slate-700 mb-4 text-sm">รายชื่อห้องเรียน</h3>
-                <div id="room-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+                <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider">รายชื่อห้องเรียน</h3>
+                <div id="room-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    </div>
             </section>
 
-            <div class="card overflow-hidden">
-                <h3 class="font-bold text-lg mb-6">ห้องเรียน: <span id="current-room-name" class="text-blue-600">-</span></h3>
+            <div class="card">
+                <h3 class="font-bold text-lg mb-6">นักเรียนในห้อง: <span id="current-room-name" class="text-blue-600">-</span></h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase">
-                            <tr><th class="px-6 py-4">รหัส</th><th class="px-6 py-4">ชื่อ-นามสกุล</th><th class="px-6 py-4 text-center">จัดการ</th></tr>
+                        <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold">
+                            <tr>
+                                <th class="px-6 py-4">รหัส</th>
+                                <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                <th class="px-6 py-4 text-center">จัดการ</th>
+                            </tr>
                         </thead>
-                        <tbody id="student-table" class="divide-y divide-slate-50"></tbody>
+                        <tbody id="student-table" class="divide-y divide-slate-50">
+                            </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div id="room-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50">
-            <div class="bg-white w-full max-w-md rounded-3xl p-8">
-                <h3 class="text-xl font-bold mb-6">เพิ่มห้องเรียน</h3>
-                <input type="text" id="new-room-name" class="w-full border p-3 rounded-xl mb-4" placeholder="ชื่อห้องเรียน">
-                <select id="new-room-color" class="w-full border p-3 rounded-xl mb-6">
-                    <option value="bg-blue-600">น้ำเงิน</option><option value="bg-emerald-500">เขียว</option><option value="bg-rose-500">แดง</option>
-                </select>
-                <div class="flex gap-3">
-                    <button onclick="closeModal('room-modal')" class="flex-1 py-3">ยกเลิก</button>
-                    <button onclick="submitNewRoom()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">บันทึก</button>
+        <div id="tab-scan" class="tab-content space-y-8">
+            <h2 class="text-2xl font-bold text-slate-800">สแกนบันทึกกิจกรรม</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card text-center space-y-4">
+                    <div class="text-5xl text-blue-500 mb-4"><i class="fas fa-user-check"></i></div>
+                    <h3 class="text-xl font-bold">เช็คชื่อเข้าเรียน</h3>
+                    <input type="text" id="scan-id-checkin" onkeyup="if(event.key==='Enter') handleQuickScan('มาเรียน')" placeholder="ยิงบาร์โค้ดที่นี่..." class="w-full border p-4 rounded-2xl text-center text-xl">
+                </div>
+                <div class="card text-center space-y-4">
+                    <div class="text-5xl text-emerald-500 mb-4"><i class="fas fa-file-upload"></i></div>
+                    <h3 class="text-xl font-bold">บันทึกส่งงาน</h3>
+                    <input type="text" id="scan-assign-name" placeholder="ชื่อวิชา/งาน" class="w-full border p-3 rounded-xl mb-2">
+                    <input type="text" id="scan-id-assign" onkeyup="if(event.key==='Enter') handleQuickScan('ส่งงาน')" placeholder="ยิงบาร์โค้ดเพื่อส่งงาน..." class="w-full border p-4 rounded-2xl text-center text-xl">
                 </div>
             </div>
         </div>
 
-        <div id="student-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50">
-            <div class="bg-white w-full max-w-md rounded-3xl p-8">
-                <h3 id="std-title" class="text-xl font-bold mb-6">ข้อมูลนักเรียน</h3>
-                <input type="hidden" id="edit-old-id">
-                <input type="text" id="new-std-id" placeholder="รหัสนักเรียน" class="w-full border p-3 rounded-xl mb-4">
-                <input type="text" id="new-std-name" placeholder="ชื่อ-นามสกุล" class="w-full border p-3 rounded-xl mb-6">
-                <div class="flex gap-3">
-                    <button onclick="closeModal('student-modal')" class="flex-1 py-3">ยกเลิก</button>
-                    <button id="std-btn" onclick="submitStudent()" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold">บันทึก</button>
-                </div>
+        <div id="tab-report" class="tab-content space-y-8">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-slate-800">รายงานการเข้าเรียน (Real-time)</h2>
+                <button onclick="loadReports()" class="text-blue-600 font-bold hover:underline">รีเฟรชข้อมูล</button>
+            </div>
+            <div class="card overflow-hidden p-0">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-800 text-white text-xs uppercase">
+                        <tr>
+                            <th class="px-6 py-4">วัน/เวลา</th>
+                            <th class="px-6 py-4">ชื่อ</th>
+                            <th class="px-6 py-4">ห้อง</th>
+                            <th class="px-6 py-4">ประเภท</th>
+                            <th class="px-6 py-4">หมายเหตุ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table" class="divide-y divide-slate-100 text-sm">
+                        </tbody>
+                </table>
             </div>
         </div>
     </main>
 
-    <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpufS7zHG9oIDaC3pP3M0r5mZJdxdxadw4xymlzEsiiwk2HdKw0WFtXWf_bBrtTloFVA/exec';
-        let currentRoom = '';
+    <div id="room-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <h3 id="room-modal-title" class="text-xl font-bold mb-6">เพิ่มห้องเรียน</h3>
+            <input type="hidden" id="old-room-name">
+            <input type="text" id="room-name" class="w-full border border-slate-200 p-4 rounded-2xl mb-4 outline-none" placeholder="ชื่อห้องเรียน (เช่น ปวช.1/1)">
+            <label class="text-sm font-bold text-slate-500 ml-1">โทนสีห้องเรียน</label>
+            <select id="room-color" class="w-full border border-slate-200 p-4 rounded-2xl mb-8 mt-1 outline-none">
+                <option value="bg-blue-600">สีน้ำเงิน</option>
+                <option value="bg-emerald-500">สีเขียว</option>
+                <option value="bg-rose-500">สีแดง</option>
+                <option value="bg-purple-500">สีม่วง</option>
+                <option value="bg-amber-500">สีส้ม</option>
+            </select>
+            <div class="flex gap-4">
+                <button onclick="closeModal('room-modal')" class="flex-1 py-4 font-bold text-slate-400">ยกเลิก</button>
+                <button onclick="submitRoom()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">บันทึก</button>
+            </div>
+        </div>
+    </div>
 
-        window.onload = () => refreshDashboard();
+    <div id="student-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <h3 id="std-title" class="text-xl font-bold mb-6">ข้อมูลนักเรียน</h3>
+            <input type="hidden" id="edit-old-id">
+            <input type="text" id="new-std-id" placeholder="รหัสนักเรียน" class="w-full border border-slate-200 p-4 rounded-2xl mb-4 outline-none">
+            <input type="text" id="new-std-name" placeholder="ชื่อ-นามสกุล" class="w-full border border-slate-200 p-4 rounded-2xl mb-8 outline-none">
+            <div class="flex gap-4">
+                <button onclick="closeModal('student-modal')" class="flex-1 py-4 font-bold text-slate-400">ยกเลิก</button>
+                <button onclick="submitStudent()" class="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-bold shadow-lg">บันทึกนักเรียน</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWxGXbnktxd-lh0n2-1iyHJrD3KJvTCxANDIAFnsyyEJntH_5Tw9MwM7V1bflc7gTQ9Q/exec';
+        let currentRoom = '';
+        let roomDataCache = [];
+
+        // --- AUTH & NAVIGATION ---
+        async function handleLogin() {
+            const username = document.getElementById('login-user').value;
+            const password = document.getElementById('login-pass').value;
+            if(!username || !password) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
+
+            Swal.showLoading();
+            const res = await callGAS('login', { username, password });
+            
+            if(res.status === 'success') {
+                Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ', text: res.user.name, timer: 1500, showConfirmButton: false });
+                document.getElementById('login-page').classList.add('hidden');
+                refreshDashboard();
+            } else {
+                Swal.fire('ผิดพลาด', res.message, 'error');
+            }
+        }
 
         function showTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
+            if(tabId === 'tab-report') loadReports();
         }
 
+        // --- API CORE ---
         async function callGAS(action, data = {}) {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
-            return await res.json();
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
+                return await res.json();
+            } catch (e) {
+                console.error("API Error", e);
+                return { status: 'error', message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้' };
+            }
         }
 
+        // --- DASHBOARD LOGIC ---
         async function refreshDashboard() {
             const res = await callGAS('getFullDashboard');
             if (res.status === 'success') {
+                roomDataCache = res.rooms;
                 renderRooms(res.rooms);
                 if (!currentRoom && res.rooms.length > 0) loadStudents(res.rooms[0].name);
             }
@@ -117,12 +216,15 @@
 
         function renderRooms(rooms) {
             document.getElementById('room-list').innerHTML = rooms.map(r => `
-                <div class="card p-4 cursor-pointer hover:border-blue-300 transition relative group">
+                <div class="card p-4 cursor-pointer border-l-4 transition relative group hover:shadow-md" style="border-left-color: ${r.color.replace('bg-', '')}">
                     <div onclick="loadStudents('${r.name}')">
-                        <div class="${r.color} w-full h-1.5 rounded-full mb-3"></div>
-                        <p class="font-bold text-slate-800 text-sm">${r.name}</p>
+                        <p class="font-bold text-slate-800">${r.name}</p>
+                        <p class="text-xs text-slate-400 mt-1"><i class="fas fa-users mr-1"></i>${r.count} คน</p>
                     </div>
-                    <button onclick="deleteRoom('${r.name}')" class="absolute top-2 right-2 text-rose-300 opacity-0 group-hover:opacity-100"><i class="fas fa-trash-alt"></i></button>
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition">
+                        <button onclick="openRoomModal('${r.name}', '${r.color}')" class="text-blue-400 hover:text-blue-600 p-1"><i class="fas fa-edit text-xs"></i></button>
+                        <button onclick="handleDeleteRoom('${r.name}')" class="text-rose-300 hover:text-rose-500 p-1"><i class="fas fa-trash-alt text-xs"></i></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -132,74 +234,144 @@
             document.getElementById('current-room-name').innerText = roomName;
             const students = await callGAS('getStudentsByRoom', { roomName });
             document.getElementById('student-table').innerHTML = students.map(s => `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 transition">
                     <td class="px-6 py-4 font-bold text-blue-600">${s.id}</td>
                     <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
                     <td class="px-6 py-4 text-center">
-                        <button onclick="openEditStudent('${s.id}', '${s.name}')" class="text-blue-500 mr-3"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteStudent('${s.id}')" class="text-rose-400"><i class="fas fa-trash"></i></button>
+                        <button onclick="openStudentModal('${s.id}', '${s.name}')" class="btn-action text-blue-500 hover:bg-blue-50"><i class="fas fa-edit"></i></button>
+                        <button onclick="handleDeleteStudent('${s.id}')" class="btn-action text-rose-400 hover:bg-rose-50"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Logic แก้ไข: ถ้ามี oldId จะเป็นการแก้ไข ถ้าไม่มีจะเป็นการเพิ่ม
-        function openEditStudent(id, name) {
-            document.getElementById('std-title').innerText = 'แก้ไขข้อมูลนักเรียน';
-            document.getElementById('edit-old-id').value = id;
-            document.getElementById('new-std-id').value = id;
-            document.getElementById('new-std-name').value = name;
-            openModal('student-modal');
+        // --- ROOM ACTIONS ---
+        function openRoomModal(name = '', color = 'bg-blue-600') {
+            document.getElementById('room-modal-title').innerText = name ? 'แก้ไขห้องเรียน' : 'เพิ่มห้องเรียน';
+            document.getElementById('old-room-name').value = name;
+            document.getElementById('room-name').value = name;
+            document.getElementById('room-color').value = color;
+            document.getElementById('room-modal').classList.remove('hidden');
         }
 
-        async function submitStudent() {
-            const oldId = document.getElementById('edit-old-id').value;
-            const id = document.getElementById('new-std-id').value;
-            const name = document.getElementById('new-std-name').value;
-            
-            if (oldId) {
-                await callGAS('editStudent', { oldId, id, name });
+        async function submitRoom() {
+            const oldName = document.getElementById('old-room-name').value;
+            const name = document.getElementById('room-name').value.trim();
+            const color = document.getElementById('room-color').value;
+
+            if(!name) return Swal.fire('คำเตือน', 'กรุณาระบุชื่อห้องเรียน', 'warning');
+
+            Swal.showLoading();
+            let res;
+            if(oldName) {
+                res = await callGAS('editRoom', { oldName, newName: name, color });
             } else {
-                await callGAS('addStudent', { id, name, room: currentRoom });
+                res = await callGAS('addRoom', { name, color });
             }
-            closeModal('student-modal');
-            loadStudents(currentRoom);
-        }
 
-        async function deleteStudent(id) {
-            if (confirm('ลบนักเรียนรหัส ' + id + '?')) {
-                await callGAS('deleteStudent', { id });
-                loadStudents(currentRoom);
+            if(res.status === 'success') {
+                closeModal('room-modal');
+                refreshDashboard();
+                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1000, showConfirmButton: false });
+            } else {
+                Swal.fire('ผิดพลาด', res.message, 'error');
             }
         }
 
-        async function submitNewRoom() {
-            const name = document.getElementById('new-room-name').value;
-            const color = document.getElementById('new-room-color').value;
-            const res = await callGAS('addRoom', { name, color });
-            if(res.status === 'error') return alert(res.message);
-            closeModal('room-modal');
-            refreshDashboard();
-        }
+        async function handleDeleteRoom(name) {
+            const confirm = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: `ห้อง ${name} และข้อมูลในห้องนี้จะหายไป`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'ลบเลย',
+                cancelButtonText: 'ยกเลิก'
+            });
 
-        async function deleteRoom(name) {
-            if (confirm('ลบห้อง ' + name + '?')) {
+            if(confirm.isConfirmed) {
                 await callGAS('deleteRoom', { name });
                 refreshDashboard();
             }
         }
 
-        function openModal(id) { 
-            if(id === 'student-modal' && !document.getElementById('edit-old-id').value) {
-                document.getElementById('std-title').innerText = 'เพิ่มนักเรียนใหม่';
-                document.getElementById('new-std-id').value = '';
-                document.getElementById('new-std-name').value = '';
-            }
-            document.getElementById(id).classList.remove('hidden'); 
+        // --- STUDENT ACTIONS ---
+        function openStudentModal(id = '', name = '') {
+            if(!currentRoom) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกห้องเรียนก่อน', 'warning');
+            document.getElementById('std-title').innerText = id ? 'แก้ไขข้อมูลนักเรียน' : 'เพิ่มนักเรียนใหม่';
+            document.getElementById('edit-old-id').value = id;
+            document.getElementById('new-std-id').value = id;
+            document.getElementById('new-std-name').value = name;
+            document.getElementById('student-modal').classList.remove('hidden');
         }
+
+        async function submitStudent() {
+            const oldId = document.getElementById('edit-old-id').value;
+            const id = document.getElementById('new-std-id').value.trim();
+            const name = document.getElementById('new-std-name').value.trim();
+
+            if(!id || !name) return Swal.fire('คำเตือน', 'กรุณากรอกข้อมูลให้ครบ', 'warning');
+
+            Swal.showLoading();
+            const action = oldId ? 'editStudent' : 'addStudent';
+            const res = await callGAS(action, { oldId, id, name, room: currentRoom });
+
+            if(res.status === 'success') {
+                closeModal('student-modal');
+                loadStudents(currentRoom);
+                Swal.fire({ icon: 'success', title: 'สำเร็จ', timer: 800, showConfirmButton: false });
+            }
+        }
+
+        async function handleDeleteStudent(id) {
+            if(await confirm(`ลบนักเรียนรหัส ${id}?`)) {
+                await callGAS('deleteStudent', { id });
+                loadStudents(currentRoom);
+            }
+        }
+
+        // --- SCAN & REPORT ---
+        async function handleQuickScan(type) {
+            const inputId = type === 'มาเรียน' ? 'scan-id-checkin' : 'scan-id-assign';
+            const detailInput = type === 'ส่งงาน' ? 'scan-assign-name' : null;
+            const studentId = document.getElementById(inputId).value.trim();
+            const detail = detailInput ? document.getElementById(detailInput).value : '-';
+
+            if(!studentId) return;
+
+            // ส่งข้อมูลไปบันทึก (ระบบจะค้นชื่อจากรหัสอัตโนมัติที่ Backend)
+            const res = await callGAS('recordActivity', {
+                studentId,
+                type,
+                detail,
+                room: 'Auto-detect' 
+            });
+
+            if(res.status === 'success') {
+                Swal.fire({ position: 'top-end', icon: 'success', title: `บันทึก ${type} สำเร็จ`, showConfirmButton: false, timer: 1000 });
+                document.getElementById(inputId).value = '';
+            }
+        }
+
+        async function loadReports() {
+            const res = await callGAS('getReports');
+            if(res.status === 'success') {
+                document.getElementById('report-table').innerHTML = res.reports.map(r => `
+                    <tr>
+                        <td class="px-6 py-4 font-mono text-xs">${r[0]} <br> <span class="text-blue-500">${r[6]}</span></td>
+                        <td class="px-6 py-4 font-bold text-slate-700">${r[2]} <br> <span class="text-xs text-slate-400 font-normal">ID: ${r[1]}</span></td>
+                        <td class="px-6 py-4">${r[3]}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold ${r[4] === 'มาเรียน' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}">${r[4]}</span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500">${r[5]}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
         function closeModal(id) { 
             document.getElementById(id).classList.add('hidden'); 
-            document.getElementById('edit-old-id').value = ''; 
         }
     </script>
 </body>
