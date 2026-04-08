@@ -263,21 +263,35 @@
         }
 
         // ฟังก์ชันล็อกอินนักเรียน (ตามรูป)
-        async function handleStudentLogin() {
-            const studentId = document.getElementById('login-user').value;
-            if(!studentId) return Swal.fire('กรุณาระบุรหัส');
-            Swal.showLoading();
-            const res = await callGAS('studentLogin', { studentId });
-            if(res.status === 'success') {
-                currentUser = res.student;
-                document.getElementById('role-selection').classList.add('hidden');
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('student-ui').classList.remove('hidden');
-                document.getElementById('std-display-name').innerText = currentUser.name;
-                refreshStudentDashboard();
-                Swal.close();
-            } else { Swal.fire('ไม่พบข้อมูล', 'รหัสนักเรียนไม่ถูกต้อง', 'error'); }
+async function handleStudentLogin() {
+    const loginInput = document.getElementById('login-user').value; // ใส่ได้ทั้ง userId หรือ username
+    if(!loginInput) return Swal.fire('กรุณาระบุรหัสเข้าใช้งาน');
+    
+    Swal.showLoading();
+    // ส่งข้อมูลไปเช็คที่ GAS โดยอิงจากตารางที่คุณให้มา
+    const res = await callGAS('studentLogin', { loginInput }); 
+    
+    if(res.status === 'success') {
+        currentUser = res.student; // ข้อมูลจาก Sheet: userId, name, class, ImageUrl
+        
+        document.getElementById('role-selection').classList.add('hidden');
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('student-ui').classList.remove('hidden');
+        
+        // แสดงชื่อนักเรียนจาก Sheet
+        document.getElementById('std-display-name').innerText = currentUser.name;
+        
+        // ดึงรูปภาพจากคอลัมน์ ImageUrl ใน Sheet มาแสดง
+        if(currentUser.ImageUrl) {
+            document.getElementById('std-avatar').innerHTML = `<img src="${currentUser.ImageUrl}" class="w-full h-full object-cover">`;
         }
+        
+        refreshStudentDashboard();
+        Swal.close();
+    } else { 
+        Swal.fire('ไม่พบข้อมูล', 'ไม่พบรหัสนักเรียนหรือชื่อผู้ใช้นี้ในระบบ', 'error'); 
+    }
+}
 
         // ดึงสถิตินักเรียน
         async function refreshStudentDashboard() {
